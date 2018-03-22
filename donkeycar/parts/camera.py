@@ -3,6 +3,7 @@ import time
 import numpy as np
 from PIL import Image
 import glob
+import cv2
 
 class BaseCamera:
 
@@ -18,6 +19,9 @@ class PiCamera(BaseCamera):
         self.camera = PiCamera() #PiCamera gets resolution (height, width)
         self.camera.resolution = resolution
         self.camera.framerate = framerate
+        # tuning
+        self.camera.exposure_mode = 'sports'
+        self.camera.color_effects = (128,128)
 
         #self.camera.exposure_mode = 'sports'
         #self.camera.iso = 800
@@ -33,10 +37,15 @@ class PiCamera(BaseCamera):
         print('PiCamera loaded.. .warming camera')
         time.sleep(2)
 
+    def preprocess(self, array):
+        img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        img = clahe.apply(img)
+        return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
     def run(self):
         f = next(self.stream)
-        frame = f.array
+        frame = self.preprocess(f.array)
         self.rawCapture.truncate(0)
         return frame
 
@@ -45,7 +54,7 @@ class PiCamera(BaseCamera):
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            self.frame = f.array
+            self.frame = self.preprocess(f.array)
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
