@@ -159,7 +159,6 @@ class PiRfController(object):
             if steering_tx == None:
                 steering_tx = 1500
             change_mode_tx = self._changeModePwm.timeHigh
-#            print(change_mode_tx, self._changeModePwm.timeLow)
             if (change_mode_tx == None or change_mode_tx < 1500):
                 self._ready_change_mode = True
             elif (self._changeModePwm.timeLow != None and self._changeModePwm.timeLow > 1500):
