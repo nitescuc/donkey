@@ -94,6 +94,11 @@ class PWMThrottle:
         if throttle > 1:
             throttle = 1
         logger.info('Output throttle order= {:01.2f}'.format(throttle))
+#        if self.mode == "local":
+#            if throttle < 0.2:
+#                throttle = 0.2
+#            elif throttle > 0.6:
+#                throttle = 0.6
         if throttle > 0:
             pulse = dk.utils.map_range(throttle,
                                     0, self.MAX_THROTTLE, 
