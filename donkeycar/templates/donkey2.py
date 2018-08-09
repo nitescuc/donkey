@@ -172,7 +172,8 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                             )
         V.add(sonar,
             inputs=['throttle'],
-            outputs=['throttle'])
+            outputs=['throttle'],
+            threaded=True)
 
     led_display = LedDisplay()
     V.add(led_display, inputs=['user/mode', 'throttle'])
