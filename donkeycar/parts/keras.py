@@ -18,6 +18,9 @@ import keras
 
 import donkeycar as dk
 
+def log_unbin(arr):
+    return 10**(np.argmax(arr)/10-1)
+
 
 class KerasPilot():
  
@@ -82,7 +85,7 @@ class KerasCategorical(KerasPilot):
         #print('throttle', throttle)
         #angle_certainty = max(angle_binned[0])
         angle_unbinned = dk.utils.linear_unbin(angle_binned)
-        throttle_unbinned = dk.utils.linear_unbin(throttle_binned)
+        throttle_unbinned = log_unbin(throttle_binned)
         return angle_unbinned, throttle_unbinned
     
     
