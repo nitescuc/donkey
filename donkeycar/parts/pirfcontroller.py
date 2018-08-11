@@ -102,6 +102,7 @@ class PiRfController(object):
         self.angle = 0.0
         self.throttle = 0.0
         self.mode = 'user'
+        self.model_path = ''
         self._crt_mode = 0
         self.poll_delay = poll_delay
         self.running = True
@@ -130,10 +131,20 @@ class PiRfController(object):
         if self.auto_record_on_throttle:
             self.recording = (self.throttle != 0.0 and self.mode == 'user')
 
-    def next_mode(self):
-        modes = ['user', 'local_angle', 'local']
-        self._crt_mode = (self._crt_mode + 1) % 3
-        self.mode = modes[self._crt_mode]
+    def set_mode(self, level):
+        if self.model_path != '':
+            if level > 1500:
+                self.mode = 'local'
+            else:
+                self.mode = 'local_angle'
+            self.recording = False
+        else:
+            if level > 1500:
+                self.mode = 'user'
+#                self.recording = True
+            else:
+                self.mode = 'user'
+#                self.recording = False
 
     def init(self):
         '''
@@ -159,12 +170,8 @@ class PiRfController(object):
             if steering_tx == None:
                 steering_tx = 1500
             change_mode_tx = self._changeModePwm.timeHigh
-            if (change_mode_tx == None or change_mode_tx < 1500):
-                self._ready_change_mode = True
-            elif (self._changeModePwm.timeLow != None and self._changeModePwm.timeLow > 1500):
-                if self._ready_change_mode:
-                    self.next_mode()
-                self._ready_change_mode = False
+            if change_mode_tx != None:
+                self.set_mode(change_mode_tx)
             freq_tx = 60
             # compensate floating zero point
             comp_throttle = throttle_tx-self.throttle_tx_thresh
@@ -184,11 +191,11 @@ class PiRfController(object):
                 print('angle= {:01.2f} throttle= {:01.2f}'.format(self.angle, self.throttle))
             time.sleep(self.poll_delay)
 
-    def run_threaded(self, img_arr=None):
-        self.img_arr = img_arr
+    def run_threaded(self, model_path):
+        self.model_path = model_path
         return self.angle, self.throttle, self.mode, self.recording
 
-    def run(self, img_arr=None):
+    def run(self, model_path):
         raise Exception("We expect for this part to be run with the threaded=True argument.")
         return False
 

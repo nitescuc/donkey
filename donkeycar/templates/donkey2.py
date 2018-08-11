@@ -104,19 +104,24 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            throttle_pin = cfg.PI_RF_THROTTLE_PIN,
                            verbose = cfg.PI_RF_VERBOSE
                            )
-        fpv = FPVWebController()
-        V.add(fpv,
-                inputs=['cam/image_array'],
-                threaded=True)        
+#        fpv = FPVWebController()
+#        V.add(fpv,
+#                inputs=['cam/image_array'],
+#                threaded=True)        
+        V.add(ctr,
+            inputs=[model_path],
+            outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+            threaded=True)
     else:        
         #This web controller will create a web server that is capable
         #of managing steering, throttle, and modes, and more.
         ctr = LocalWebController()
 
-    V.add(ctr,
-          inputs=['cam/image_array'],
-          outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-          threaded=True)
+    if not (use_pirf or cfg.USE_PI_RF_AS_DEFAULT):
+        V.add(ctr,
+            inputs=['cam/image_array'],
+            outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+            threaded=True)
 
     emergencyCtrl = EmergencyController()
 
