@@ -63,6 +63,20 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION)
         V.add(cam, outputs=['cam/image_array'], threaded=True)
 
+    steering_controller = PCA9685(cfg.STEERING_CHANNEL)
+    steering = PWMSteering(controller=steering_controller,
+                           left_pulse=cfg.STEERING_LEFT_PWM,
+                           right_pulse=cfg.STEERING_RIGHT_PWM)
+
+    throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL)
+    throttle = PWMThrottle(controller=throttle_controller,
+                           max_pulse=cfg.THROTTLE_FORWARD_PWM,
+                           zero_pulse=cfg.THROTTLE_STOPPED_PWM,
+                           min_pulse=cfg.THROTTLE_REVERSE_PWM)
+
+    V.add(steering, inputs=['angle'])
+    V.add(throttle, inputs=['throttle', 'user/mode'])
+
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         # modify max_throttle closer to 1.0 to have more power
         # modify steering_scale lower than 1.0 to have less responsive steering
@@ -102,6 +116,8 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            throttle_tx_thresh = cfg.PI_RF_THROTTLE_TRESH,
                            steering_pin = cfg.PI_RF_STEERING_PIN,
                            throttle_pin = cfg.PI_RF_THROTTLE_PIN,
+                           steering_act = steering,
+                           throttle_act = throttle,
                            verbose = cfg.PI_RF_VERBOSE
                            )
 #        fpv = FPVWebController()
@@ -182,21 +198,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     led_display = LedDisplay()
     V.add(led_display, inputs=['user/mode', 'throttle'])
-
-    steering_controller = PCA9685(cfg.STEERING_CHANNEL)
-
-    steering = PWMSteering(controller=steering_controller,
-                           left_pulse=cfg.STEERING_LEFT_PWM,
-                           right_pulse=cfg.STEERING_RIGHT_PWM)
-
-    throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL)
-    throttle = PWMThrottle(controller=throttle_controller,
-                           max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                           zero_pulse=cfg.THROTTLE_STOPPED_PWM,
-                           min_pulse=cfg.THROTTLE_REVERSE_PWM)
-
-    V.add(steering, inputs=['angle'])
-    V.add(throttle, inputs=['throttle', 'user/mode'])
 
     # add tub to save data
     inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']
