@@ -74,9 +74,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            zero_pulse=cfg.THROTTLE_STOPPED_PWM,
                            min_pulse=cfg.THROTTLE_REVERSE_PWM)
 
-    V.add(steering, inputs=['angle'])
-    V.add(throttle, inputs=['throttle', 'user/mode'])
-
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         # modify max_throttle closer to 1.0 to have more power
         # modify steering_scale lower than 1.0 to have less responsive steering
@@ -198,6 +195,10 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     led_display = LedDisplay()
     V.add(led_display, inputs=['user/mode', 'throttle'])
+
+    # steering and throttle should be added at the end
+    V.add(steering, inputs=['angle'])
+    V.add(throttle, inputs=['throttle', 'user/mode'])
 
     # add tub to save data
     inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']

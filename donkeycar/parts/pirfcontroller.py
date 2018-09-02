@@ -179,7 +179,7 @@ class PiRfController(object):
         def on_change_throttle(value):
             if self.mode != 'local':
                 self.throttle = self.remapThrottle(value)
-                self.throttle_act.run(self.throttle)
+                self.throttle_act.run(self.throttle, self.mode)
 
         self._pi = pigpio.pi()
         self._steeringPwm = PWMReader(self._pi, self._steeringPin, on_change_steering)

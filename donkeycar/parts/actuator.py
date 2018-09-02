@@ -45,6 +45,8 @@ class PWMSteering:
         self.right_pulse = right_pulse
 
     def run(self, angle):
+        if angle is None:
+            angle = 0
         #map absolute angle to angle that vehicle can implement.
         logger.info('Output angle order= {:01.2f}'.format(angle))
         pulse = dk.utils.map_range(angle,
@@ -86,11 +88,13 @@ class PWMThrottle:
         self.kick = [410,410,410,410]
         logger.info('Kicker reloaded')
 
-    def run(self, throttle, mode):
-        if self.mode == "user" and mode != "user":
-            self.reloadKick()
+    def run(self, throttle, mode = 'user'):
+#        if self.mode == "user" and mode != "user":
+#            self.reloadKick()
         self.mode = mode
 
+        if throttle is None:
+            throttle = 0
         if throttle > 1:
             throttle = 1
         logger.info('Output throttle order= {:01.2f}'.format(throttle))
@@ -104,14 +108,14 @@ class PWMThrottle:
                                     0, self.MAX_THROTTLE, 
                                     self.zero_pulse, self.max_pulse)
 # Motor cann not start a too low throttle, kick it for the first cycles             
-            if len(self.kick)>0:
-                logger.info('Kicker active')
-                pulse = self.kick.pop()
+#            if len(self.kick)>0:
+#                logger.info('Kicker active')
+#                pulse = self.kick.pop()
 
 # Ensure thottle order would not go below a limit (risk of motor shutdown)
-            if self.mode != "user" and pulse < 395:
-                logger.info('PWMThrottle order too low')
-                pulse = 395
+#            if self.mode != "user" and pulse < 395:
+#                logger.info('PWMThrottle order too low')
+#                pulse = 395
         else:
             pulse = dk.utils.map_range(throttle,
                                     self.MIN_THROTTLE, 0, 
