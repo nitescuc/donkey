@@ -58,7 +58,8 @@ class PWMReader():
         self._pin_mode = pi.get_mode(self._pin)
         pi.set_mode(self._pin, pigpio.INPUT)
         pi.set_pull_up_down(self._pin, pigpio.PUD_UP)
-        self._cb = pi.callback(self._pin, pigpio.EITHER_EDGE, self._cbf)
+        self._cb = None
+        self.initCb(True)
 
         self._inited = True
     def _cbf(self, gpio, level, tick):
@@ -74,6 +75,16 @@ class PWMReader():
                 self._high = None
                 if self.on_change_high is not None:
                     self.on_change_high(self.timeHigh)
+
+    def initCb(self, active):
+        if active:
+            if self._cb is None:
+                self._cb = self._pi.callback(self._pin, pigpio.EITHER_EDGE, self._cbf)
+        else:
+            if self._cb is not None:
+                self._cb.cancel()
+            self._cb = None
+
 
     def cancel(self):
         """
@@ -142,12 +153,17 @@ class PiRfController(object):
 
     def set_mode(self, level):
         if self.model_path != '':
+            self._steeringPwm.initCb(False)
             if level > 1500:
                 self.mode = 'local'
+                self._throttlePwm.initCb(False)
             else:
                 self.mode = 'local_angle'
+                self._throttlePwm.initCb(True)
             self.recording = False
         else:
+            self._steeringPwm.initCb(True)
+            self._throttlePwm.initCb(True)
             if level > 1500:
                 self.mode = 'user'
 #                self.recording = True
@@ -157,12 +173,14 @@ class PiRfController(object):
 
     def init(self):
         def on_change_steering(value):
-            self.steering_act.run(self.remapSteering(value))
+            if self.mode == 'user':
+                self.angle = self.remapSteering(value)
+                self.steering_act.run(self.angle)
         def on_change_throttle(value):
-            self.throttle_act.run(self.remapThrottle(value))
-        '''
-        attempt to init Tx
-        '''
+            if self.mode != 'local':
+                self.throttle = self.remapThrottle(value)
+                self.throttle_act.run(self.throttle)
+
         self._pi = pigpio.pi()
         self._steeringPwm = PWMReader(self._pi, self._steeringPin, on_change_steering)
         self._throttlePwm = PWMReader(self._pi, self._throttlePin, on_change_throttle)
