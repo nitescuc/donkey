@@ -93,7 +93,8 @@ class PWMReader():
         """
         if self._inited:
             self._inited = False
-            self._cb.cancel()
+            if self._cb is not None:
+                self._cb.cancel()
             self._pi.set_mode(self._pin, self._pin_mode)
 
 class PiRfController(object):
@@ -113,6 +114,7 @@ class PiRfController(object):
                  auto_record_on_throttle=True,
                  steering_act=None,
                  throttle_act=None,
+                 model_path=None,
                  verbose = False
                  ):
 
@@ -139,6 +141,7 @@ class PiRfController(object):
         self._throttlePwm = None
         self._changeModePwm = None
         self._ready_change_mode = True
+        self.model_path = model_path
         self.verbose = verbose
 
         self.steering_act = steering_act
@@ -172,18 +175,9 @@ class PiRfController(object):
 #                self.recording = False
 
     def init(self):
-        def on_change_steering(value):
-            if self.mode == 'user':
-                self.angle = self.remapSteering(value)
-                self.steering_act.run(self.angle)
-        def on_change_throttle(value):
-            if self.mode != 'local':
-                self.throttle = self.remapThrottle(value)
-                self.throttle_act.run(self.throttle, self.mode)
-
         self._pi = pigpio.pi()
-        self._steeringPwm = PWMReader(self._pi, self._steeringPin, on_change_steering)
-        self._throttlePwm = PWMReader(self._pi, self._throttlePin, on_change_throttle)
+        self._steeringPwm = PWMReader(self._pi, self._steeringPin)
+        self._throttlePwm = PWMReader(self._pi, self._throttlePin)
         self._changeModePwm = PWMReader(self._pi, self._changeModePin)
         return True
 
@@ -225,10 +219,11 @@ class PiRfController(object):
             logger.info('angle= {:01.2f} throttle= {:01.2f}'.format(self.angle, self.throttle))
             if self.verbose:
                 print('angle= {:01.2f} throttle= {:01.2f}'.format(self.angle, self.throttle))
+            self.steering_act.run(self.angle)
+            self.throttle_act.run(self.throttle, self.mode)
             time.sleep(self.poll_delay)
 
-    def run_threaded(self, model_path):
-        self.model_path = model_path
+    def run_threaded(self):
         return self.angle, self.throttle, self.mode, self.recording
 
     def run(self, model_path):

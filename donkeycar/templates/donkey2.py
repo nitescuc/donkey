@@ -115,6 +115,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            throttle_pin = cfg.PI_RF_THROTTLE_PIN,
                            steering_act = steering,
                            throttle_act = throttle,
+                           model_path=model_path,
                            verbose = cfg.PI_RF_VERBOSE
                            )
 #        fpv = FPVWebController()
@@ -122,7 +123,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 #                inputs=['cam/image_array'],
 #                threaded=True)        
         V.add(ctr,
-            inputs=[model_path],
+            inputs=[],
             outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
             threaded=True)
     else:        
