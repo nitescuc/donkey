@@ -155,7 +155,7 @@ class PiRfController(object):
             self.recording = (self.throttle != 0.0 and self.mode == 'user')
 
     def set_mode(self, level):
-        if self.model_path != '':
+        if self.model_path is not None:
             self._steeringPwm.initCb(False)
             if level > 1500:
                 self.mode = 'local'
