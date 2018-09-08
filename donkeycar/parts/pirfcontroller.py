@@ -219,8 +219,10 @@ class PiRfController(object):
             logger.info('angle= {:01.2f} throttle= {:01.2f}'.format(self.angle, self.throttle))
             if self.verbose:
                 print('angle= {:01.2f} throttle= {:01.2f}'.format(self.angle, self.throttle))
-            self.steering_act.run(self.angle)
-            self.throttle_act.run(self.throttle, self.mode)
+            if self.mode == 'user':
+                self.steering_act.run(self.angle)
+            if self.mode != 'local':
+                self.throttle_act.run(self.throttle, self.mode)
             time.sleep(self.poll_delay)
 
     def run_threaded(self):
