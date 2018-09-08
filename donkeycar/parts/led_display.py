@@ -76,5 +76,9 @@ class LedDisplay(object):
     def run(self, mode, throttle):
         self.setMode(mode, throttle)
 
-#    def shutdown(self):
+    def shutdown(self):
+        self._pi.write(self._redPin, 0)
+        self._pi.write(self._greenPin, 0)
+        self._pi.write(self._bluePin, 0)
+        
 
