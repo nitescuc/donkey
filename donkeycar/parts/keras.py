@@ -80,7 +80,8 @@ class KerasCategorical(KerasPilot):
             self.model = default_categorical()
         
     def run(self, img_arr):
-        img_arr = img_arr.reshape((1,) + img_arr.shape)
+        #img_arr = img_arr.reshape((1,) + img_arr.shape)
+        img_arr = img_arr.reshape((1,120,160,1))
         angle_binned, throttle_binned = self.model.predict(img_arr)
         #print('throttle', throttle)
         #angle_certainty = max(angle_binned[0])
