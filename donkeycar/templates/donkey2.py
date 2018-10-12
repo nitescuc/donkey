@@ -157,10 +157,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     if not use_tx:
         if model_path:
             kl = KerasCategorical()
-            if model_path.endswith('.hd5'):
-                kl.load_weights(model_path)
-            else:    
-                kl.load(model_path)
+            kl.load(model_path)
 
             V.add(kl, inputs=['cam/image_array'],
                 outputs=['pilot/angle', 'pilot/throttle'],
