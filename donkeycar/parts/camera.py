@@ -9,6 +9,11 @@ class BaseCamera:
 
     def run_threaded(self):
         return self.frame
+    def preprocess(self, array):
+        img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        img = clahe.apply(img)
+        return img
 
 class PiCamera(BaseCamera):
     def __init__(self, resolution=(120, 160), framerate=20):
@@ -98,8 +103,8 @@ class Webcam(BaseCamera):
             start = datetime.now()
 
             frame = self.cam.get_frame()
-            im = Image.frombytes('L', (self.cam.width, self.cam.height), frame, 'raw', 'L')
-            self.frame = cv2.resize(np.asarray(im), self.resolution)
+            im = Image.frombytes('RGB', (self.cam.width, self.cam.height), frame, 'raw', 'RGB')
+            self.frame = self.preprocess(cv2.resize(np.asarray(im), (160,120)))
 
             stop = datetime.now()
             s = 1 / self.framerate - (stop - start).total_seconds()
