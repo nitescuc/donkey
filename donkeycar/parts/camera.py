@@ -99,7 +99,7 @@ class Webcam(BaseCamera):
 
             frame = self.cam.get_frame()
             im = Image.frombytes('L', (self.cam.width, self.cam.height), frame, 'raw', 'L')
-            self.frame = np.asarray(im)
+            self.frame = cv2.resize(np.asarray(im), self.resolution)
 
             stop = datetime.now()
             s = 1 / self.framerate - (stop - start).total_seconds()
