@@ -99,7 +99,7 @@ class Webcam(BaseCamera):
 
             frame = self.cam.get_frame()
             im = Image.frombytes('L', (self.cam.width, self.cam.height), frame, 'raw', 'L')
-            self.frame = numpy.asarray(im)
+            self.frame = np.asarray(im)
 
             stop = datetime.now()
             s = 1 / self.framerate - (stop - start).total_seconds()
