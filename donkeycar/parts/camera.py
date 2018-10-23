@@ -73,6 +73,51 @@ class PiCamera(BaseCamera):
 
 class Webcam(BaseCamera):
     def __init__(self, resolution = (160, 120), framerate = 20):
+        from PyV4L2Camera.camera import Camera
+        from PyV4L2Camera.controls import ControlIDs
+
+        super().__init__()
+
+        self.cam = Camera('/dev/video0', 640, 480)
+        self.resolution = resolution
+        self.framerate = framerate
+
+        self.cam.set_control_value(ControlIDs.BRIGHTNESS, 48)
+        self.cam.set_control_value(ControlIDs.CONTRAST, 10)
+
+        # initialize variable used to indicate
+        # if the thread should be stopped
+        self.frame = None
+        self.on = True
+
+        print('WebcamVideoStream loaded')
+
+    def update(self):
+        from datetime import datetime, timedelta
+        while self.on:
+            start = datetime.now()
+
+            frame = self.cam.get_frame()
+            im = Image.frombytes('L', (self.cam.width, self.cam.height), frame, 'raw', 'L')
+            self.frame = numpy.asarray(im)
+
+            stop = datetime.now()
+            s = 1 / self.framerate - (stop - start).total_seconds()
+            if s > 0:
+                time.sleep(s)
+        self.cam.close()
+
+    def run_threaded(self):
+        return self.frame
+
+    def shutdown(self):
+        # indicate that the thread should be stopped
+        self.on = False
+        print('stoping Webcam')
+        time.sleep(.5)
+
+class PyGameWebcam(BaseCamera):
+    def __init__(self, resolution = (160, 120), framerate = 20):
         import pygame
         import pygame.camera
 
