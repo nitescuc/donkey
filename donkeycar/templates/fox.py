@@ -38,7 +38,7 @@ from donkeycar.parts.camera import Webcam
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
-from donkeycar.parts.controller import LocalWebController, FPVWebController, TxController
+from donkeycar.parts.controller import LocalWebController, FPVWebController, NucleoController
 
 from sys import platform
 
@@ -63,7 +63,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     #This web controller will create a web server that is capable
     #of managing steering, throttle, and modes, and more.
     ctr = LocalWebController()
-
     V.add(ctr,
         inputs=['cam/image_array'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
@@ -113,7 +112,13 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types)
-    V.add(tub, inputs=inputs, run_condition='recording')
+#    V.add(tub, inputs=inputs, run_condition='recording')
+
+    ctr = NucleoController(cfg.SERIAL_DEVICE, model_path, tub)
+    V.add(ctr, 
+        inputs=['cam/image_array'],
+        outputs=['user/mode'],
+        threaded=True)
 
     # run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
