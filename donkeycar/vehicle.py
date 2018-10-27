@@ -86,6 +86,7 @@ class Vehicle():
             time.sleep(1)
 
             loop_count = 0
+            last = 0
             while self.on:
                 start_time = time.time()
                 loop_count += 1
@@ -97,6 +98,9 @@ class Vehicle():
                     self.on = False
 
                 sleep_time = 1.0 / rate_hz - (time.time() - start_time)
+                if last+5 < start_time:
+                    print(sleep_time)
+                    last = start_time
                 if sleep_time > 0.0:
                     time.sleep(sleep_time)
 
