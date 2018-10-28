@@ -5,26 +5,26 @@ class NucleoController(object):
 
     def __init__(self,
                  serial_device=None,
+                 serial_baud=115200,
                  model_path=None,
-                 tub_writer=None,
                  verbose = False
                  ):
         self.model_path = model_path
-        self.tub_writer = tub_writer
         self.serial_device = serial_device
+        self.serial_baud = serial_baud
 
         self.mode = 'user'
         
         self.init()
 
     def init(self):
-        self.serial = serial.Serial(self.serial_device, 230400)
+        self.serial = serial.Serial(self.serial_device, self.serial_baud)
         return True
     
     def update(self):
         return True
 
-    def run_threaded(self, img_arr):
+    def run_threaded(self):
         self.serial.write(b'r')
         line = self.serial.readline()
         steering = float(line[:5])

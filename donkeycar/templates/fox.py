@@ -68,7 +68,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
         threaded=True)
 
-    ctr = NucleoController(cfg.SERIAL_DEVICE, model_path, tub)
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, model_path)
     V.add(ctr, 
         inputs=[],
         outputs=['user/angle', 'user/throttle', 'user/mode'],
