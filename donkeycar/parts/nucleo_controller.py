@@ -1,4 +1,5 @@
 import serial
+import time
 
 class NucleoController(object):
 
@@ -26,15 +27,10 @@ class NucleoController(object):
     def run_threaded(self, img_arr):
         self.serial.write(b'r')
         line = self.serial.readline()
-        try:
-            steering = float(line[:5])
-            throttle = float(line[5:10])
-            remote = float(line[10:15])
-            #['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']
-            self.tub_writer.run(img_arr, steering, throttle, self.mode, 0, 0)
-        except:
-            print('Serial error')
-        return False
+        steering = float(line[:5])
+        throttle = float(line[5:10])
+        remote = float(line[10:15])
+        return steering, throttle, self.mode
 
     def run(self, *args):
         return False

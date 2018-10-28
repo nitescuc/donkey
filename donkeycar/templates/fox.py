@@ -68,6 +68,12 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
         threaded=True)
 
+    ctr = NucleoController(cfg.SERIAL_DEVICE, model_path, tub)
+    V.add(ctr, 
+        inputs=[],
+        outputs=['user/angle', 'user/throttle', 'user/mode'],
+        threaded=True)
+
     # See if we should even run the pilot module.
     # This is only needed because the part run_condition only accepts boolean
     def pilot_condition(mode):
@@ -112,13 +118,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types)
-#    V.add(tub, inputs=inputs, run_condition='recording')
-
-    ctr = NucleoController(cfg.SERIAL_DEVICE, model_path, tub)
-    V.add(ctr, 
-        inputs=['cam/image_array'],
-        outputs=['user/mode'],
-        threaded=True)
+    V.add(tub, inputs=inputs, run_condition='recording')
 
     # run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
