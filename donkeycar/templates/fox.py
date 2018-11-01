@@ -68,12 +68,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
         threaded=True)
 
-    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, model_path)
-    V.add(ctr, 
-        inputs=[],
-        outputs=['user/angle', 'user/throttle', 'user/mode'],
-        threaded=True)
-
     # See if we should even run the pilot module.
     # This is only needed because the part run_condition only accepts boolean
     def pilot_condition(mode):
@@ -92,6 +86,12 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         V.add(kl, inputs=['cam/image_array'],
             outputs=['pilot/angle', 'pilot/throttle'],
             run_condition='run_pilot')
+
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, model_path)
+    V.add(ctr, 
+        inputs=['pilot/angle', 'pilot/throttle'],
+        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        threaded=True)
 
     # Choose what inputs should change the car.
     def drive_mode(mode,
