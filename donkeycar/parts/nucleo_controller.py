@@ -55,13 +55,14 @@ class NucleoController(object):
         return True
 
     def run_threaded(self, p_angle, p_throttle, p_mode):
-        steering = p_angle
-        throttle = p_throttle
         if p_mode != self.mode:
             self.change_mode(p_mode)
-        if throttle > 0.2:
-            throttle = 0.2
-        if p_mode == 'user':
+        if self.mode != 'user':
+            steering = p_angle
+            throttle = p_throttle
+            if throttle > 0.2:
+                throttle = 0.2
+        if self.mode == 'user':
             self.serial.write(b'r')
             line = self.serial.readline()
             steering = float(line[:5]) * 2 - 1
