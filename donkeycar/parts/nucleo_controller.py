@@ -77,7 +77,7 @@ class NucleoController(object):
             if throttle != None and steering != None:
                 steering = (steering + 1)/2
                 throttle = (throttle + 1)/2
-                self.serial.write(b'w{:01.3f}{:01.3f}'.format(steering, throttle))
+                self.serial.write(('w{:01.3f}{:01.3f}'.format(steering, throttle)).encode())
         
         return steering, throttle, self.mode, self.recording
 
