@@ -40,7 +40,7 @@ class NucleoController(object):
                 steering = float(line[:5])
                 throttle = float(line[5:10]) - 0.5
                 remote = float(line[10:15])
-                self.set_mode(remote)
+                #self.set_mode(remote)
             time.sleep(0.5)
                 
         return True
@@ -48,11 +48,13 @@ class NucleoController(object):
     def run_threaded(self, p_angle, p_throttle):
         steering = p_angle
         throttle = p_throttle
+        if throttle > 0.2:
+            throttle = 0.2
         if self.mode == 'user':
             self.serial.write(b'r')
             line = self.serial.readline()
-            steering = float(line[:5])
-            throttle = float(line[5:10]) - 0.5
+            steering = float(line[:5]) * 2 - 1
+            throttle = float(line[5:10]) * 2 - 1
             remote = float(line[10:15])
             #
             if throttle < 0.05 and throttle > -0.05: 
@@ -60,7 +62,7 @@ class NucleoController(object):
             self.set_mode(remote)
             self.recording = throttle > 0 and self.mode == 'user'
         else:
-            self.serial.write(b'w{:01.3f}{:01.3f}'.format(steering, throttle))
+            self.serial.write(b'w{:01.3f}{:01.3f}'.format((steering + 1) / 2, (throttle + 1) / 2)
 
         
         return steering, throttle, self.mode, self.recording

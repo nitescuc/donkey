@@ -57,7 +57,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     V = dk.vehicle.Vehicle()
 
     if platform != "darwin":
-        cam = Webcam(resolution=cfg.CAMERA_RESOLUTION)
+        cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
         V.add(cam, outputs=['cam/image_array'], threaded=True)
 
     #This web controller will create a web server that is capable

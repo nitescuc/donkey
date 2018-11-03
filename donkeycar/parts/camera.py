@@ -11,6 +11,7 @@ class BaseCamera:
         return self.frame
     def preprocess(self, array):
         img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
+        img[0:20] = 0
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         img = clahe.apply(img)
         return img
@@ -77,7 +78,7 @@ class PiCamera(BaseCamera):
         self.camera.close()
 
 class Webcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20):
+    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0):
         from PyV4L2Camera.camera import Camera
         from PyV4L2Camera.controls import ControlIDs
 
@@ -86,9 +87,11 @@ class Webcam(BaseCamera):
         self.cam = Camera('/dev/video0', 640, 480)
         self.resolution = resolution
         self.framerate = framerate
+        self.brightness = brightness
 
-        self.cam.set_control_value(ControlIDs.BRIGHTNESS, 48)
-        self.cam.set_control_value(ControlIDs.CONTRAST, 10)
+        self.cam.set_control_value(ControlIDs.BRIGHTNESS, self.brightness)
+        self.cam.set_control_value(ControlIDs.AUTOGAIN, 0)
+        #self.cam.set_control_value(ControlIDs.CONTRAST, 10)
 
         # initialize variable used to indicate
         # if the thread should be stopped
