@@ -31,39 +31,51 @@ class NucleoController(object):
             else:
                 self.mode = 'local_angle'
             self.recording = False
+    
+    def change_mode(self, mode):
+        mode_letter = 'mu'
+        if mode == 'local_angle':
+            mode_letter = 'ma'
+        if mode == 'local':
+            mode_letter = 'mp'
+        self.serial.write(mode_letter)
+        self.mode = mode
 
     def update(self):
-        while True:
-            if self.mode != 'user':
-                self.serial.write(b'r')
-                line = self.serial.readline()
-                steering = float(line[:5])
-                throttle = float(line[5:10]) - 0.5
-                remote = float(line[10:15])
+#        while True:
+#            if self.mode != 'user':
+#                self.serial.write(b'r')
+#                line = self.serial.readline()
+#                steering = float(line[:5])
+#                throttle = float(line[5:10]) - 0.5
+#                remote = float(line[10:15])
                 #self.set_mode(remote)
-            time.sleep(0.5)
+#            time.sleep(0.5)
                 
         return True
 
-    def run_threaded(self, p_angle, p_throttle):
+    def run_threaded(self, p_angle, p_throttle, p_mode):
         steering = p_angle
         throttle = p_throttle
+        if p_mode != self.mode:
+            self.change_mode(p_mode)
         if throttle > 0.2:
             throttle = 0.2
-        if self.mode == 'user':
+        if p_mode == 'user':
             self.serial.write(b'r')
             line = self.serial.readline()
             steering = float(line[:5]) * 2 - 1
             throttle = float(line[5:10]) * 2 - 1
-            remote = float(line[10:15])
+            #remote = float(line[10:15])
             #
             if throttle < 0.05 and throttle > -0.05: 
                 throttle = 0
-            self.set_mode(remote)
+            #self.set_mode(remote)
             self.recording = throttle > 0 and self.mode == 'user'
         else:
-            self.serial.write(b'w{:01.3f}{:01.3f}'.format((steering + 1) / 2, (throttle + 1) / 2)
-
+            steering = (steering + 1)/2
+            throttle = (throttle + 1)/2
+            self.serial.write(b'w{:01.3f}{:01.3f}'.format(steering, throttle))
         
         return steering, throttle, self.mode, self.recording
 

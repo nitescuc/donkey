@@ -11,7 +11,7 @@ class BaseCamera:
         return self.frame
     def preprocess(self, array):
         img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
-        img[0:20] = 0
+        img = cv2.rotate(img, rotateCode=cv2.ROTATE_180)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         img = clahe.apply(img)
         return img
