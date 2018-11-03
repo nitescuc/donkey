@@ -38,7 +38,7 @@ class NucleoController(object):
             mode_letter = 'ma'
         if mode == 'local':
             mode_letter = 'mp'
-        self.serial.write(mode_letter)
+        self.serial.write(mode_letter.encode())
         self.mode = mode
 
     def update(self):
@@ -60,7 +60,7 @@ class NucleoController(object):
         if self.mode != 'user':
             steering = p_angle
             throttle = p_throttle
-            if throttle > 0.2:
+            if throttle != None and throttle > 0.2:
                 throttle = 0.2
         if self.mode == 'user':
             self.serial.write(b'r')
@@ -74,9 +74,10 @@ class NucleoController(object):
             #self.set_mode(remote)
             self.recording = throttle > 0 and self.mode == 'user'
         else:
-            steering = (steering + 1)/2
-            throttle = (throttle + 1)/2
-            self.serial.write(b'w{:01.3f}{:01.3f}'.format(steering, throttle))
+            if throttle != None and steering != None:
+                steering = (steering + 1)/2
+                throttle = (throttle + 1)/2
+                self.serial.write(b'w{:01.3f}{:01.3f}'.format(steering, throttle))
         
         return steering, throttle, self.mode, self.recording
 
