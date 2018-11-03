@@ -60,7 +60,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     V = dk.vehicle.Vehicle()
 
     if platform != "darwin":
-        cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION)
+        cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION, camera.CAMERA_FRAMERATE)
         V.add(cam, outputs=['cam/image_array'], threaded=True)
 
     steering_controller = PCA9685(cfg.STEERING_CHANNEL)
