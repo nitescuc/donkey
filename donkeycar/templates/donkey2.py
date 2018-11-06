@@ -122,11 +122,11 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
             inputs=[],
             outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
             threaded=True)
-            if use_fpv:
-                fpv = FPVWebController()
-                V.add(fpv,
-                    inputs=['cam/image_array'],
-                    threaded=True)        
+        if use_fpv:
+            fpv = FPVWebController()
+            V.add(fpv,
+                inputs=['cam/image_array'],
+                threaded=True)        
     else:        
         #This web controller will create a web server that is capable
         #of managing steering, throttle, and modes, and more.
