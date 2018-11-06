@@ -3,7 +3,7 @@
 Scripts to drive a donkey 2 car and train a model for it. 
 
 Usage:
-    manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar]
+    manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar] [--fpv]
     manage.py (train) [--tub=<tub1,tub2,..tubn>]  (--model=<model>) [--base_model=<base_model>] [--no_cache]
 
 Options:
@@ -118,14 +118,15 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            model_path=model_path,
                            verbose = cfg.PI_RF_VERBOSE
                            )
-#        fpv = FPVWebController()
-#        V.add(fpv,
-#                inputs=['cam/image_array'],
-#                threaded=True)        
         V.add(ctr,
             inputs=[],
             outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
             threaded=True)
+            if use_fpv:
+                fpv = FPVWebController()
+                V.add(fpv,
+                    inputs=['cam/image_array'],
+                    threaded=True)        
     else:        
         #This web controller will create a web server that is capable
         #of managing steering, throttle, and modes, and more.
@@ -265,7 +266,7 @@ if __name__ == '__main__':
     cfg = dk.load_config()
 
     if args['drive']:
-        drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'])
+        drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'], use_fpv=args['--fpv'])
 
     elif args['train']:
         tub = args['--tub']
