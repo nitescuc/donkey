@@ -11,7 +11,7 @@ class BaseCamera:
         return self.frame
 
 class PiCamera(BaseCamera):
-    def __init__(self, resolution=(120, 160), framerate=20):
+    def __init__(self, resolution=(120, 160), framerate=20, calibrate=False):
         from picamera.array import PiRGBArray
         from picamera import PiCamera
         resolution = (resolution[1], resolution[0])
@@ -22,6 +22,8 @@ class PiCamera(BaseCamera):
         # tuning
         self.camera.exposure_mode = 'sports'
         self.camera.color_effects = (128,128)
+        #
+        self.calibrate = calibrate
 
         #self.camera.exposure_mode = 'sports'
         #self.camera.iso = 800
@@ -39,11 +41,19 @@ class PiCamera(BaseCamera):
 
     def preprocess(self, array):
         img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
-        img[0:20] = 0
-        img[100:120] = 0
+        if not self.calibrate:
+            img[0:20] = 0
+            img[100:120] = 0
+
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         img = clahe.apply(img)
-#        return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        
+        if self.calibrate:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            resolution = self.camera.resolution
+            for x in range(0, resolution[0], resolution[0]//12):
+                cv2.line(img, (0,x), (resolution[1],x), (57, 255, 20), 1)
+
         return img
 
     def run(self):

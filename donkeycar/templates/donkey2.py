@@ -4,6 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar] [--fpv]
+    manage.py (calibrate)
     manage.py (train) [--tub=<tub1,tub2,..tubn>]  (--model=<model>) [--base_model=<base_model>] [--no_cache]
 
 Options:
@@ -217,6 +218,22 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
+def calibrate(cfg):
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    cam = PiCamera((480, 640), calibrate=True)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+
+    fpv = FPVWebController()
+    V.add(fpv,
+            inputs=['cam/image_array'],
+            threaded=True)        
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+            max_loop_count=cfg.MAX_LOOPS)
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
+
 def train(cfg, tub_names, model_name, base_model=None):
     '''
     use the specified data in tub_names to train an artifical neural network
@@ -267,6 +284,9 @@ if __name__ == '__main__':
 
     if args['drive']:
         drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'], use_fpv=args['--fpv'])
+
+    elif args['calibrate']:
+        calibrate(cfg)
 
     elif args['train']:
         tub = args['--tub']
