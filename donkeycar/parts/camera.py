@@ -51,7 +51,7 @@ class PiCamera(BaseCamera):
         if self.calibrate:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
             resolution = self.camera.resolution
-            for x in range(0, resolution[0], resolution[0]//12):
+            for x in range(0, resolution[0], resolution[0]//24):
                 cv2.line(img, (0,x), (resolution[1],x), (57, 255, 20), 1)
 
         return img
