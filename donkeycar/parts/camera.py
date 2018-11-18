@@ -8,13 +8,7 @@ import cv2
 class BaseCamera:
 
     def run_threaded(self):
-        return self.frame
-    def preprocess(self, array):
-        img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
-        img = cv2.rotate(img, rotateCode=cv2.ROTATE_180)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        img = clahe.apply(img)
-        return img
+        return np.copy(self.frame)
 
 class PiCamera(BaseCamera):
     def __init__(self, resolution=(120, 160), framerate=20):
@@ -43,16 +37,9 @@ class PiCamera(BaseCamera):
         print('PiCamera loaded.. .warming camera')
         time.sleep(2)
 
-    def preprocess(self, array):
-        img = cv2.cvtColor(array, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        img = clahe.apply(img)
-#        return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return img
-
     def run(self):
         f = next(self.stream)
-        frame = self.preprocess(f.array)
+        frame = f.array
         self.rawCapture.truncate(0)
         return frame
 
@@ -61,7 +48,7 @@ class PiCamera(BaseCamera):
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            self.frame = self.preprocess(f.array)
+            self.frame = f.array
             self.rawCapture.truncate(0)
 
             # if the thread indicator variable is set, stop the thread
@@ -107,16 +94,13 @@ class Webcam(BaseCamera):
 
             frame = self.cam.get_frame()
             im = Image.frombytes('RGB', (self.cam.width, self.cam.height), frame, 'raw', 'RGB')
-            self.frame = self.preprocess(cv2.resize(np.asarray(im), (160,120)))
+            self.frame = cv2.rotate(cv2.resize(np.asarray(im), (160,120)), rotateCode=cv2.ROTATE_180)
 
             stop = datetime.now()
             s = 1 / self.framerate - (stop - start).total_seconds()
             if s > 0:
                 time.sleep(s)
         self.cam.close()
-
-    def run_threaded(self):
-        return self.frame
 
     def shutdown(self):
         # indicate that the thread should be stopped

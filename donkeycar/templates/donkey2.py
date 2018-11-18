@@ -3,7 +3,8 @@
 Scripts to drive a donkey 2 car and train a model for it. 
 
 Usage:
-    manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar]
+    manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar] [--fpv]
+    manage.py (calibrate)
     manage.py (train) [--tub=<tub1,tub2,..tubn>]  (--model=<model>) [--base_model=<base_model>] [--no_cache]
 
 Options:
@@ -35,8 +36,10 @@ import donkeycar as dk
 
 # import parts
 from donkeycar.parts.camera import PiCamera
+from donkeycar.parts.camera_calibrate import ImageCalibrate
+from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
-from donkeycar.parts.keras import KerasCategorical, KerasLinear
+from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.controller import LocalWebController, FPVWebController, JoystickController, TxController, PiRfController, SonarController
@@ -45,7 +48,7 @@ from donkeycar.parts.led_display import LedDisplay
 
 from sys import platform
 
-def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False, use_sonar=False):
+def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False, use_sonar=False, use_fpv=False):
     '''
     Start the drive loop
     Each part runs as a job in the Vehicle loop, calling either
@@ -59,9 +62,10 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    if platform != "darwin":
-        cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION)
-        V.add(cam, outputs=['cam/image_array'], threaded=True)
+    cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION)
+    V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     steering_controller = PCA9685(cfg.STEERING_CHANNEL)
     steering = PWMSteering(controller=steering_controller,
@@ -74,62 +78,28 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                            zero_pulse=cfg.THROTTLE_STOPPED_PWM,
                            min_pulse=cfg.THROTTLE_REVERSE_PWM)
 
-    if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
-        # modify max_throttle closer to 1.0 to have more power
-        # modify steering_scale lower than 1.0 to have less responsive steering
-        ctr = JoystickController(max_throttle=cfg.JOYSTICK_MAX_THROTTLE,
-                                 steering_scale=cfg.JOYSTICK_STEERING_SCALE,
-                                 auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE,
-                                 throttle_axis = cfg.JOYSTICK_THROTTLE_AXIS,
-                                 steering_axis = cfg.JOYSTICK_STEERING_AXIS,
-                                 btn_mode = cfg.JOYSTICK_DRIVING_MODE_BUTTON,
-                                 btn_record_toggle = cfg.JOYSTICK_RECORD_TOGGLE_BUTTON,
-                                 btn_inc_max_throttle = cfg.JOYSTICK_INCREASE_MAX_THROTTLE_BUTTON,
-                                 btn_dec_max_throttle = cfg.JOYSTICK_DECREASE_MAX_THROTTLE_BUTTON,
-                                 btn_inc_throttle_scale = cfg.JOYSTICK_INCREASE_THROTTLE_SCALE_BUTTON,
-                                 btn_dec_throttle_scale = cfg.JOYSTICK_DECREASE_THROTTLE_SCALE_BUTTON,
-                                 btn_inc_steer_scale = cfg.JOYSTICK_INCREASE_STEERING_SCALE_BUTTON,
-                                 btn_dec_steer_scale = cfg.JOYSTICK_DECREASE_STEERING_SCALE_BUTTON,
-                                 btn_toggle_const_throttle = cfg.JOYSTICK_TOGGLE_CONSTANT_THROTTLE_BUTTON,
-                                 verbose = cfg.JOYSTICK_VERBOSE
-                                 )
-    elif use_tx or cfg.USE_TX_AS_DEFAULT:
-        ctr = TxController(throttle_tx_min = cfg.TX_THROTTLE_MIN,
-                           throttle_tx_max = cfg.TX_THROTTLE_MAX,
-                           steering_tx_min = cfg.TX_STEERING_MIN,
-                           steering_tx_max = cfg.TX_STEERING_MAX,
-                           throttle_tx_thresh = cfg.TX_THROTTLE_TRESH,
-                           verbose = cfg.TX_VERBOSE
-                           )
+    ctr = PiRfController(throttle_tx_min = cfg.PI_RF_THROTTLE_MIN,
+                        throttle_tx_max = cfg.PI_RF_THROTTLE_MAX,
+                        steering_tx_min = cfg.PI_RF_STEERING_MIN,
+                        steering_tx_max = cfg.PI_RF_STEERING_MAX,
+                        throttle_tx_thresh = cfg.PI_RF_THROTTLE_TRESH,
+                        steering_pin = cfg.PI_RF_STEERING_PIN,
+                        throttle_pin = cfg.PI_RF_THROTTLE_PIN,
+                        change_mode_pin = cfg.PI_RF_MODE_PIN,
+                        steering_act = steering,
+                        throttle_act = throttle,
+                        model_path=model_path,
+                        verbose = cfg.PI_RF_VERBOSE
+                        )
+    V.add(ctr,
+        inputs=[],
+        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        threaded=True)
+    if use_fpv:
         fpv = FPVWebController()
         V.add(fpv,
-                inputs=['cam/image_array'],
-                threaded=True)        
-    elif use_pirf or cfg.USE_PI_RF_AS_DEFAULT:
-        ctr = PiRfController(throttle_tx_min = cfg.PI_RF_THROTTLE_MIN,
-                           throttle_tx_max = cfg.PI_RF_THROTTLE_MAX,
-                           steering_tx_min = cfg.PI_RF_STEERING_MIN,
-                           steering_tx_max = cfg.PI_RF_STEERING_MAX,
-                           throttle_tx_thresh = cfg.PI_RF_THROTTLE_TRESH,
-                           steering_pin = cfg.PI_RF_STEERING_PIN,
-                           throttle_pin = cfg.PI_RF_THROTTLE_PIN,
-                           steering_act = steering,
-                           throttle_act = throttle,
-                           model_path=model_path,
-                           verbose = cfg.PI_RF_VERBOSE
-                           )
-#        fpv = FPVWebController()
-#        V.add(fpv,
-#                inputs=['cam/image_array'],
-#                threaded=True)        
-        V.add(ctr,
-            inputs=[],
-            outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-            threaded=True)
-    else:        
-        #This web controller will create a web server that is capable
-        #of managing steering, throttle, and modes, and more.
-        ctr = LocalWebController()
+            inputs=['cam/image_array'],
+            threaded=True)        
 
     if not (use_pirf or cfg.USE_PI_RF_AS_DEFAULT):
         V.add(ctr,
@@ -137,12 +107,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
             outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
             threaded=True)
 
-    emergencyCtrl = EmergencyController()
-
-    V.add(emergencyCtrl,
-          inputs=['user/mode'],
-          outputs=['user/mode'],
-          threaded=True)
     # See if we should even run the pilot module.
     # This is only needed because the part run_condition only accepts boolean
     def pilot_condition(mode):
@@ -154,14 +118,13 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
 
-    if not use_tx:
-        if model_path:
-            kl = KerasCategorical()
-            kl.load(model_path)
+    if model_path:
+        kl = KerasCategorical()
+        kl.load(model_path)
 
-            V.add(kl, inputs=['cam/image_array'],
-                outputs=['pilot/angle', 'pilot/throttle'],
-                run_condition='run_pilot')
+        V.add(kl, inputs=['cam/image_array'],
+            outputs=['pilot/angle', 'pilot/throttle'],
+            run_condition='run_pilot')
 
     # Choose what inputs should change the car.
     def drive_mode(mode,
@@ -216,6 +179,24 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
+def calibrate(cfg):
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    cam = PiCamera((480, 640))
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+    calibrate = ImageCalibrate((480,640))
+    V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
+
+    fpv = FPVWebController()
+    V.add(fpv,
+            inputs=['cam/image_array'],
+            threaded=True)        
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+            max_loop_count=cfg.MAX_LOOPS)
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
+
 def train(cfg, tub_names, model_name, base_model=None):
     '''
     use the specified data in tub_names to train an artifical neural network
@@ -265,7 +246,10 @@ if __name__ == '__main__':
     cfg = dk.load_config()
 
     if args['drive']:
-        drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'])
+        drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'], use_fpv=args['--fpv'])
+
+    elif args['calibrate']:
+        calibrate(cfg)
 
     elif args['train']:
         tub = args['--tub']
