@@ -4,6 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar]
+    manage.py (calibrate)
     manage.py (train) [--tub=<tub1,tub2,..tubn>]  (--model=<model>) [--base_model=<base_model>] [--no_cache]
 
 Options:
@@ -35,6 +36,8 @@ import donkeycar as dk
 
 # import parts
 from donkeycar.parts.camera import Webcam
+from donkeycar.parts.camera_calibrate import ImageCalibrate
+from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
@@ -56,9 +59,10 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    if platform != "darwin":
-        cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
-        V.add(cam, outputs=['cam/image_array'], threaded=True)
+    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION)
+    V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     #This web controller will create a web server that is capable
     #of managing steering, throttle, and modes, and more.
@@ -126,6 +130,23 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
+
+def calibrate(cfg):
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    cam = Webcam(resolution=(480,640), framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+    calibrate = ImageCalibrate((480,640))
+    V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
+
+    fpv = FPVWebController()
+    V.add(fpv,
+            inputs=['cam/image_array'],
+            threaded=True)        
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 def train(cfg, tub_names, model_name, base_model=None):
     '''
