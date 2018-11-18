@@ -183,7 +183,7 @@ def calibrate(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    cam = PiCamera((480, 640), calibrate=True)
+    cam = PiCamera((480, 640))
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     calibrate = ImageCalibrate((480,640))
     V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)

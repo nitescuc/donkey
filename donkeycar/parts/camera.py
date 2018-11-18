@@ -11,7 +11,7 @@ class BaseCamera:
         return np.copy(self.frame)
 
 class PiCamera(BaseCamera):
-    def __init__(self, resolution=(120, 160), framerate=20, calibrate=False):
+    def __init__(self, resolution=(120, 160), framerate=20):
         from picamera.array import PiRGBArray
         from picamera import PiCamera
         resolution = (resolution[1], resolution[0])
@@ -22,8 +22,6 @@ class PiCamera(BaseCamera):
         # tuning
         self.camera.exposure_mode = 'sports'
         self.camera.color_effects = (128,128)
-        #
-        self.calibrate = calibrate
 
         #self.camera.exposure_mode = 'sports'
         #self.camera.iso = 800
