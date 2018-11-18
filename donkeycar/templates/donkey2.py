@@ -85,6 +85,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                         throttle_tx_thresh = cfg.PI_RF_THROTTLE_TRESH,
                         steering_pin = cfg.PI_RF_STEERING_PIN,
                         throttle_pin = cfg.PI_RF_THROTTLE_PIN,
+                        change_mode_pin = cfg.PI_RF_MODE_PIN,
                         steering_act = steering,
                         throttle_act = throttle,
                         model_path=model_path,
@@ -185,7 +186,7 @@ def calibrate(cfg):
     cam = PiCamera((480, 640), calibrate=True)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     calibrate = ImageCalibrate((480,640))
-    V.add(cam, outputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
+    V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     fpv = FPVWebController()
     V.add(fpv,
