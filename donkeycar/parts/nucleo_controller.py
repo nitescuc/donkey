@@ -14,14 +14,15 @@ class NucleoController(object):
         self.serial_baud = serial_baud
         self.recording = False
 
-        self.mode = 'user'
+        self.mode = None
         
         self.init()
 
     def init(self):
         self.serial = serial.Serial(self.serial_device, self.serial_baud)
         # limit
-        self.serial.write(b'L0.600')
+        #self.serial.write(b'L0.600')
+        self.change_mode('user')
         return True
     
     def set_mode(self, level):
@@ -77,6 +78,7 @@ class NucleoController(object):
             if throttle != None and steering != None:
                 steering = (steering + 1)/2
                 throttle = (throttle + 1)/2
+                print(throttle)
                 self.serial.write(('w{:01.3f}{:01.3f}'.format(steering, throttle)).encode())
         
         return steering, throttle, self.mode, self.recording
