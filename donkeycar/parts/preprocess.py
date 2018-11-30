@@ -3,7 +3,7 @@ import cv2
 
 
 class ImageProcessor:
-    def __init__(self, resolution=(120, 160), trimTop=None, trimBottom=(90, 120), applyClahe=True):
+    def __init__(self, resolution=(120, 160), trimTop=None, trimBottom=None, applyClahe=True):
         self.resolution = resolution
         self.trimTop = trimTop
         self.trimBottom = trimBottom
@@ -11,6 +11,7 @@ class ImageProcessor:
 
     def preprocess(self, img):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#        img = img + 50
         if self.trimTop != None:
             img[self.trimTop[0]:self.trimTop[1]] = 0
         if self.trimBottom != None:

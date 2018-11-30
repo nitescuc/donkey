@@ -8,8 +8,10 @@ class ImageCalibrate:
 
     def preprocess(self, img):
         resolution = self.resolution
-        yLen = resolution[1]
-        xLen = resolution[0]
+#        print(img.shape)
+#        print(resolution)
+        yLen = resolution[0]
+        xLen = resolution[1]
         for x in range(0, yLen, yLen//12):
             cv2.line(img, (40,x), (xLen,x), (57, 255, 20), 1)
             cv2.putText(img, str(x//4),

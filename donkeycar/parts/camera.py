@@ -65,7 +65,7 @@ class PiCamera(BaseCamera):
         self.camera.close()
 
 class Webcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0):
+    def __init__(self, resolution = (120, 160), framerate = 20, brightness = 0, rotate = 0):
         from PyV4L2Camera.camera import Camera
         from PyV4L2Camera.controls import ControlIDs
 
@@ -75,10 +75,10 @@ class Webcam(BaseCamera):
         self.resolution = resolution
         self.framerate = framerate
         self.brightness = brightness
+        self.rotate = rotate
 
-        self.cam.set_control_value(ControlIDs.BRIGHTNESS, self.brightness)
-        self.cam.set_control_value(ControlIDs.AUTOGAIN, 0)
-        #self.cam.set_control_value(ControlIDs.CONTRAST, 10)
+#        self.cam.set_control_value(ControlIDs.BRIGHTNESS, self.brightness)
+#        self.cam.set_control_value(ControlIDs.CONTRAST, 20)
 
         # initialize variable used to indicate
         # if the thread should be stopped
@@ -94,7 +94,9 @@ class Webcam(BaseCamera):
 
             frame = self.cam.get_frame()
             im = Image.frombytes('RGB', (self.cam.width, self.cam.height), frame, 'raw', 'RGB')
-            self.frame = cv2.rotate(cv2.resize(np.asarray(im), (160,120)), rotateCode=cv2.ROTATE_180)
+            self.frame = cv2.resize(np.asarray(im), (self.resolution[1], self.resolution[0]))
+            if self.rotate: 
+                self.frame = cv2.rotate(self.frame, rotateCode=cv2.ROTATE_180)
 
             stop = datetime.now()
             s = 1 / self.framerate - (stop - start).total_seconds()

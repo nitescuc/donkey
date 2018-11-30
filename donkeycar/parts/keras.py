@@ -15,6 +15,7 @@ models to help direct the vehicles motion.
 import os
 import numpy as np
 import keras
+import time
 
 import donkeycar as dk
 
@@ -85,12 +86,12 @@ class KerasCategorical(KerasPilot):
     def run(self, img_arr):
         #img_arr = img_arr.reshape((1,) + img_arr.shape)
         img_arr = img_arr.reshape((1,120,160,1))
+        #print(img_arr.dtype)
+        start = time.time()
         angle_binned, throttle_binned = self.model.predict(img_arr)
-        #print('throttle', throttle)
-        #angle_certainty = max(angle_binned[0])
-        angle_unbinned = dk.utils.linear_unbin(angle_binned)
-        throttle_unbinned = log_unbin(throttle_binned)
-        return angle_unbinned, throttle_unbinned
+#        print(time.time() - start)
+
+        return np.argmax(angle_binned), (np.argmax(throttle_binned)+8)
     
     
     
@@ -179,7 +180,7 @@ def default_categorical():
     
     #continous output of throttle
     #throttle_out = Dense(1, activation='relu', name='throttle_out')(x)      # Reduce to 1 number, Positive number only
-    throttle_out = Dense(11, activation='softmax', name='throttle_out')(x)        # Connect every input with every output and output 15 hidden units. Use Softmax to give percentage. 15 categories and find best one based off percentage 0.0-1.0
+    throttle_out = Dense(7, activation='softmax', name='throttle_out')(x)        # Connect every input with every output and output 15 hidden units. Use Softmax to give percentage. 15 categories and find best one based off percentage 0.0-1.0
     
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
     model.compile(optimizer='adam',
