@@ -199,6 +199,9 @@ if __name__ == '__main__':
     if args['drive']:
         drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'])
 
+    elif args['calibrate']:
+        calibrate(cfg)
+
     elif args['train']:
         tub = args['--tub']
         model = args['--model']
