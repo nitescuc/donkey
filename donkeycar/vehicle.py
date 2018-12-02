@@ -23,7 +23,7 @@ class Vehicle():
 
 
     def add(self, part, inputs=[], outputs=[], 
-            threaded=False, run_condition=None):
+            threaded=False, run_condition=None, can_apply_config=False):
         """
         Method to add a part to the vehicle drive loop.
 
@@ -44,6 +44,7 @@ class Vehicle():
         entry['inputs'] = inputs
         entry['outputs'] = outputs
         entry['run_condition'] = run_condition
+        entry['can_apply_config'] = can_apply_config
 
         if threaded:
             t = Thread(target=part.update, args=())
@@ -137,7 +138,10 @@ class Vehicle():
                 if outputs is not None:
                     self.mem.put(entry['outputs'], outputs)
 
-                    
+    def apply_config(self, config):
+        for entry in self.parts:
+            if entry.get('can_apply_config'):
+                entry['part'].apply_config(config)
 
     def stop(self):
         print('Shutting down vehicle and its parts...')

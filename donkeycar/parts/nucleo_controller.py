@@ -22,6 +22,15 @@ class NucleoController(object):
 
         self.serial_init()
 
+    def apply_config(self, config):
+        if 'mode_path' in config:
+            print('Setting model path in NucleoController:' + config['model_path'])
+            self.model_path = config['model_path']
+            if self.model_path:
+                self.change_mode('local_angle')
+            else:
+                self.change_mode('user')
+
     def serial_init(self):
         self.serial = serial.Serial(self.serial_device, self.serial_baud, timeout=5)
         self.serial.reset_input_buffer()
@@ -53,8 +62,8 @@ class NucleoController(object):
     def run(self, p_angle, p_throttle, p_mode):
         if not self.serialInitialized:
             return 7, 7, 'user', False
-        if p_mode != self.mode:
-            self.change_mode(p_mode)
+#        if p_mode != self.mode:
+#            self.change_mode(p_mode)
         if self.mode != 'user':
             steering = p_angle
             throttle = p_throttle

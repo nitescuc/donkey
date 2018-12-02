@@ -3,9 +3,8 @@
 Scripts to drive a donkey 2 car and train a model for it. 
 
 Usage:
-    manage.py (drive) [--model=<model>] [--js|--tx|--pirf] [--sonar]
+    manage.py (drive)
     manage.py (calibrate)
-    manage.py (train) [--tub=<tub1,tub2,..tubn>]  (--model=<model>) [--base_model=<base_model>] [--no_cache]
 
 Options:
     -h --help        Show this screen.
@@ -41,11 +40,13 @@ from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
-from donkeycar.parts.controller import LocalWebController, FPVWebController, NucleoController
+from donkeycar.parts.nucleo_controller import NucleoController
+from donkeycar.parts.control_api import APIController
+from donkeycar.parts.web_fpv import FPVWebController
 
 from sys import platform
 
-def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False, use_sonar=False):
+def drive(cfg):
     '''
     Start the drive loop
     Each part runs as a job in the Vehicle loop, calling either
@@ -66,10 +67,9 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     #This web controller will create a web server that is capable
     #of managing steering, throttle, and modes, and more.
-    ctr = LocalWebController()
+    ctr = APIController(vehicle=V)
     V.add(ctr,
-        inputs=['cam/image_array'],
-        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        outputs=['user/mode'],
         threaded=True)
 
     # See if we should even run the pilot module.
@@ -83,19 +83,16 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
 
-    if model_path:
-        kl = KerasCategorical()
-        kl.load(model_path)
+    kl = KerasCategorical()
+    V.add(kl, inputs=['cam/image_array'],
+        outputs=['pilot/angle', 'pilot/throttle'],
+        run_condition='run_pilot', can_apply_config=True)
 
-        V.add(kl, inputs=['cam/image_array'],
-            outputs=['pilot/angle', 'pilot/throttle'],
-            run_condition='run_pilot')
-
-    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, model_path)
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-        threaded=True)
+        threaded=True, can_apply_config=True)
 
     # Choose what inputs should change the car.
     def drive_mode(mode,
@@ -148,67 +145,15 @@ def calibrate(cfg):
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
-def train(cfg, tub_names, model_name, base_model=None):
-    '''
-    use the specified data in tub_names to train an artifical neural network
-    saves the output trained model as model_name
-    '''
-    X_keys = ['cam/image_array']
-    y_keys = ['user/angle', 'user/throttle']
-
-    def rt(record):
-        record['user/angle'] = dk.utils.linear_bin(record['user/angle'])
-        return record
-
-    kl = KerasCategorical()
-    #kl = KerasLinear()
-    print(base_model)
-    if base_model is not None:
-        base_model = os.path.expanduser(base_model)
-        kl.load(base_model)
-
-    print('tub_names', tub_names)
-    if not tub_names:
-        tub_names = os.path.join(cfg.DATA_PATH, '*')
-
-    tubgroup = TubGroup(tub_names)
-    train_gen, val_gen = tubgroup.get_train_val_gen(X_keys, y_keys, record_transform=rt,
-                                                    batch_size=cfg.BATCH_SIZE,
-                                                    train_frac=cfg.TRAIN_TEST_SPLIT)
-
-    model_path = os.path.expanduser(model_name)
-
-    total_records = len(tubgroup.df)
-    total_train = int(total_records * cfg.TRAIN_TEST_SPLIT)
-    total_val = total_records - total_train
-    print('train: %d, validation: %d' % (total_train, total_val))
-    steps_per_epoch = total_train // cfg.BATCH_SIZE
-    print('steps_per_epoch', steps_per_epoch)
-
-    kl.train(train_gen,
-             val_gen,
-             saved_model_path=model_path,
-             steps=steps_per_epoch,
-             train_split=cfg.TRAIN_TEST_SPLIT)
-
-
 if __name__ == '__main__':
     args = docopt(__doc__)
     cfg = dk.load_config()
 
     if args['drive']:
-        drive(cfg, model_path=args['--model'], use_joystick=args['--js'], use_tx=args['--tx'], use_pirf=args['--pirf'], use_sonar=args['--sonar'])
+        drive(cfg)
 
-    elif args['calibrate']:
+    if args['calibrate']:
         calibrate(cfg)
-
-    elif args['train']:
-        tub = args['--tub']
-        model = args['--model']
-        base_model = args['--base_model']
-        cache = not args['--no_cache']
-        train(cfg, tub, model, base_model=base_model)
-
 
 
 
