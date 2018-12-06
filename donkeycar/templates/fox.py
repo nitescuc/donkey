@@ -68,9 +68,7 @@ def drive(cfg):
     #This web controller will create a web server that is capable
     #of managing steering, throttle, and modes, and more.
     ctr = APIController()
-    V.add(ctr,
-        outputs=['config'],
-        threaded=True)
+    V.add(ctr, outputs=['user/mode', 'recording', 'config'], threaded=True)
 
     def apply_config(config):
         if config != None:
@@ -95,7 +93,7 @@ def drive(cfg):
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
-        inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
+        inputs=['pilot/angle', 'pilot/throttle', 'user/mode', 'recording'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
         threaded=True, can_apply_config=True)
 

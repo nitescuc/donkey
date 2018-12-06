@@ -22,7 +22,6 @@ class APIController(tornado.web.Application):
 
         self.mode = 'user'
         self.recording = False
-        #self.vehicle = vehicle
 
         handlers = [
             (r"/drive", DriveAPI),
@@ -33,11 +32,6 @@ class APIController(tornado.web.Application):
 
         super().__init__(handlers, **settings)
     
-#    def apply_config(self, config):
-#        if self.vehicle:
-#            print('Apply config to vehicle')
-#            self.vehicle.apply_config(config)
-
     def update(self, port=8887):
         ''' Start the tornado webserver. '''
         print(port)
@@ -49,19 +43,22 @@ class APIController(tornado.web.Application):
     def run_threaded(self):
         ret = self.config
         self.config = None
-        return ret
+        return self.mode, self.recording, ret
         
     def run(self):
         ret = self.config
         self.config = None
-        return ret
+        return self.mode, self.recording, ret
 
 
 class DriveAPI(tornado.web.RequestHandler):
     
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
-        self.application.mode = data['drive_mode']
+        if 'drive_mode' in data:
+            self.application.mode = data['drive_mode']
+        if 'recording' in data:
+            self.application.recording = data['recording']
 
 class ConfigAPI(tornado.web.RequestHandler):    
 

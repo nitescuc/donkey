@@ -6,11 +6,9 @@ class NucleoController(object):
     def __init__(self,
                  serial_device=None,
                  serial_baud=115200,
-                 model_path=None,
                  verbose = False,
                  limit = 0x04
                  ):
-        self.model_path = model_path
         self.serial_device = serial_device
         self.serial_baud = serial_baud
         self.recording = False
@@ -23,13 +21,7 @@ class NucleoController(object):
         self.serial_init()
 
     def apply_config(self, config):
-        if 'model_path' in config:
-            print('Setting model path in NucleoController:' + config['model_path'])
-            self.model_path = config['model_path']
-            if self.model_path:
-                self.change_mode('local_angle')
-            else:
-                self.change_mode('user')
+        pass
 
     def serial_init(self):
         self.serial = serial.Serial(self.serial_device, self.serial_baud, timeout=5)
@@ -59,11 +51,11 @@ class NucleoController(object):
     def run_threaded(self, p_angle, p_throttle, p_mode):
         return True
 
-    def run(self, p_angle, p_throttle, p_mode):
+    def run(self, p_angle, p_throttle, p_mode, p_recording):
         if not self.serialInitialized:
             return 7, 7, 'user', False
-#        if p_mode != self.mode:
-#            self.change_mode(p_mode)
+        if p_mode != self.mode:
+            self.change_mode(p_mode)
         if self.mode != 'user':
             steering = p_angle
             throttle = p_throttle
@@ -76,13 +68,14 @@ class NucleoController(object):
             else:
                steering = 7
                throttle = 7
-            self.recording = throttle > 7 and self.mode == 'user'
         else:
             if throttle != None and steering != None:
                 package = bytearray()
                 package.append(steering * 16 + throttle)
                 self.serial.write(b'w')
                 self.serial.write(package)
+
+        self.recording = p_recording or (throttle > 7 and self.mode == 'user')
         
         return steering, throttle, self.mode, self.recording
 
