@@ -22,6 +22,7 @@ class APIController(tornado.web.Application):
 
         self.mode = 'user'
         self.recording = False
+        self.config = None
 
         handlers = [
             (r"/drive", DriveAPI),
@@ -65,3 +66,8 @@ class ConfigAPI(tornado.web.RequestHandler):
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
         self.application.config = data
+        if 'model_path' in data:
+            if data['model_path'] != '':
+                self.application.mode = 'local_angle'
+            else:
+                self.application.mode = 'user'

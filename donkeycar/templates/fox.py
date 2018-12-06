@@ -95,7 +95,7 @@ def drive(cfg):
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode', 'recording'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-        threaded=True, can_apply_config=True)
+        threaded=False, can_apply_config=True)
 
     # Choose what inputs should change the car.
     def drive_mode(mode,
