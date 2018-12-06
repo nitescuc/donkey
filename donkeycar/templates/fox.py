@@ -42,7 +42,7 @@ from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.nucleo_controller import NucleoController
 from donkeycar.parts.control_api import APIController
-from donkeycar.parts.web_fpv import FPVWebController
+from donkeycar.parts.web_fpv.web import FPVWebController
 
 from sys import platform
 
@@ -67,10 +67,16 @@ def drive(cfg):
 
     #This web controller will create a web server that is capable
     #of managing steering, throttle, and modes, and more.
-    ctr = APIController(vehicle=V)
+    ctr = APIController()
     V.add(ctr,
-        outputs=['user/mode'],
+        outputs=['config'],
         threaded=True)
+
+    def apply_config(config):
+        if config != None:
+            V.apply_config(config)
+    apply_config_part = Lambda(apply_config)
+    V.add(apply_config_part, inputs=['config'])
 
     # See if we should even run the pilot module.
     # This is only needed because the part run_condition only accepts boolean
@@ -79,7 +85,6 @@ def drive(cfg):
             return False
         else:
             return True
-
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
 

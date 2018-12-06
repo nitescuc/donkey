@@ -23,7 +23,7 @@ class NucleoController(object):
         self.serial_init()
 
     def apply_config(self, config):
-        if 'mode_path' in config:
+        if 'model_path' in config:
             print('Setting model path in NucleoController:' + config['model_path'])
             self.model_path = config['model_path']
             if self.model_path:

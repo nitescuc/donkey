@@ -26,6 +26,7 @@ def log_unbin(arr):
 class KerasPilot():
  
     def load(self, model_path):
+        print('KERAS loading model: ' + model_path)
         if model_path.endswith('.h5'):
             self.model.load_weights(model_path)
         else:

@@ -8,11 +8,11 @@ import tornado.ioloop
 import tornado.web
 import tornado.gen
 
-from ... import utils
+#from ... import utils
 
 class APIController(tornado.web.Application):
 
-    def __init__(self, vehicle=None):
+    def __init__(self):
         ''' 
         Create and publish variables needed on many of 
         the web handlers.
@@ -22,7 +22,7 @@ class APIController(tornado.web.Application):
 
         self.mode = 'user'
         self.recording = False
-        self.vehicle = vehicle
+        #self.vehicle = vehicle
 
         handlers = [
             (r"/drive", DriveAPI),
@@ -33,10 +33,10 @@ class APIController(tornado.web.Application):
 
         super().__init__(handlers, **settings)
     
-    def apply_config(self, config):
-        if self.vehicle:
-            print('Apply config to vehicle')
-            self.vehicle.apply_config(config)
+#    def apply_config(self, config):
+#        if self.vehicle:
+#            print('Apply config to vehicle')
+#            self.vehicle.apply_config(config)
 
     def update(self, port=8887):
         ''' Start the tornado webserver. '''
@@ -47,10 +47,14 @@ class APIController(tornado.web.Application):
 
 
     def run_threaded(self):
-        return self.mode
+        ret = self.config
+        self.config = None
+        return ret
         
     def run(self):
-        return self.mode
+        ret = self.config
+        self.config = None
+        return ret
 
 
 class DriveAPI(tornado.web.RequestHandler):
@@ -63,5 +67,4 @@ class ConfigAPI(tornado.web.RequestHandler):
 
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
-        self.application.apply_config(data)
-
+        self.application.config = data
