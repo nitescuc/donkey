@@ -15,16 +15,14 @@ models to help direct the vehicles motion.
 import os
 import numpy as np
 import keras
+import time
 
 import donkeycar as dk
-
-def log_unbin(arr):
-    return 10**(np.argmax(arr)/10-1)
-
 
 class KerasPilot():
  
     def load(self, model_path):
+        print('KERAS loading model: ' + model_path)
         if model_path.endswith('.h5'):
             self.model.load_weights(model_path)
         else:
@@ -35,6 +33,11 @@ class KerasPilot():
         pass
     
     
+    def apply_config(self, config):
+        if config['model_path']:
+            self.load(config['model_path'])
+
+
     def train(self, train_gen, val_gen, 
               saved_model_path, epochs=100, steps=100, train_split=0.8,
               verbose=1, min_delta=.0005, patience=5, use_early_stop=True):
@@ -85,13 +88,12 @@ class KerasCategorical(KerasPilot):
     def run(self, img_arr):
         #img_arr = img_arr.reshape((1,) + img_arr.shape)
         img_arr = img_arr.reshape((1,120,160,1))
+        #print(img_arr.dtype)
+        start = time.time()
         angle_binned, throttle_binned = self.model.predict(img_arr)
-        #print('throttle', throttle)
-        #angle_certainty = max(angle_binned[0])
-        angle_unbinned = dk.utils.linear_unbin(angle_binned)
-        throttle_unbinned = log_unbin(throttle_binned)
-        return angle_unbinned, throttle_unbinned
-    
+#        print(time.time() - start)
+
+        return np.argmax(angle_binned), (np.argmax(throttle_binned)+8)
     
     
 class KerasLinear(KerasPilot):
@@ -179,7 +181,7 @@ def default_categorical():
     
     #continous output of throttle
     #throttle_out = Dense(1, activation='relu', name='throttle_out')(x)      # Reduce to 1 number, Positive number only
-    throttle_out = Dense(11, activation='softmax', name='throttle_out')(x)        # Connect every input with every output and output 15 hidden units. Use Softmax to give percentage. 15 categories and find best one based off percentage 0.0-1.0
+    throttle_out = Dense(7, activation='softmax', name='throttle_out')(x)        # Connect every input with every output and output 15 hidden units. Use Softmax to give percentage. 15 categories and find best one based off percentage 0.0-1.0
     
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
     model.compile(optimizer='adam',
