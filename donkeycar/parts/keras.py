@@ -93,7 +93,8 @@ class KerasCategorical(KerasPilot):
         angle_binned, throttle_binned = self.model.predict(img_arr)
 #        print(time.time() - start)
 
-        return np.argmax(angle_binned) * (2/14) - 1, (np.argmax(throttle_binned)+8) * (2/14) - 1
+#        return np.argmax(angle_binned) * (2/14) - 1, (np.argmax(throttle_binned)+8) * (2/14) - 1
+        return np.argmax(angle_binned), (np.argmax(throttle_binned)+8)
     
 class KerasLinear(KerasPilot):
     def __init__(self, model=None, num_outputs=None, *args, **kwargs):
