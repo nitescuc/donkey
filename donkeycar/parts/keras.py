@@ -19,10 +19,6 @@ import time
 
 import donkeycar as dk
 
-def log_unbin(arr):
-    return 10**(np.argmax(arr)/10-1)
-
-
 class KerasPilot():
  
     def load(self, model_path):
@@ -37,6 +33,11 @@ class KerasPilot():
         pass
     
     
+    def apply_config(self, config):
+        if config['model_path']:
+            self.load(config['model_path'])
+
+
     def train(self, train_gen, val_gen, 
               saved_model_path, epochs=100, steps=100, train_split=0.8,
               verbose=1, min_delta=.0005, patience=5, use_early_stop=True):
@@ -97,7 +98,6 @@ class KerasCategorical(KerasPilot):
     def apply_config(self, config):
         if config['model_path']:
             self.load(config['model_path'])
-    
     
 class KerasLinear(KerasPilot):
     def __init__(self, model=None, num_outputs=None, *args, **kwargs):

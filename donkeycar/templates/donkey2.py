@@ -64,7 +64,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION)
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimTop=(0,0), trimBottom=None)
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     steering_controller = PCA9685(cfg.STEERING_CHANNEL)
@@ -88,7 +88,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                         change_mode_pin = cfg.PI_RF_MODE_PIN,
                         steering_act = steering,
                         throttle_act = throttle,
-                        model_path=model_path,
+                        model_path = model_path,
                         verbose = cfg.PI_RF_VERBOSE
                         )
     V.add(ctr,
@@ -125,6 +125,12 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         V.add(kl, inputs=['cam/image_array'],
             outputs=['pilot/angle', 'pilot/throttle'],
             run_condition='run_pilot')
+    def discrete_to_float(steering, throttle):
+        st = steering * (2/14) - 1
+        th = throttle * (2/14) - 1
+        return st, th
+    discrete_to_float_part = Lambda(discrete_to_float)
+    V.add(discrete_to_float_part, inputs=['pilot/angle', 'pilot/throttle'], outputs=['pilot/angle', 'pilot/throttle'], run_condition='run_pilot')    
 
     # Choose what inputs should change the car.
     def drive_mode(mode,
