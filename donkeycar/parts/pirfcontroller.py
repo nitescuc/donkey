@@ -181,6 +181,10 @@ class PiRfController(object):
         self._changeModePwm = PWMReader(self._pi, self._changeModePin)
         return True
 
+    def apply_config(self, config):
+        if config['throttle_max']:
+            self.throttle_tx_max = int(config['throttle_tx_max'])
+
     def remapSteering(self, value):
         steering_tx = value
         if steering_tx == None:
@@ -225,8 +229,8 @@ class PiRfController(object):
                 self.throttle_act.run(self.throttle, self.mode)
             time.sleep(self.poll_delay)
 
-    def run_threaded(self):
-        return self.angle, self.throttle, self.mode, self.recording
+    def run_threaded(self, external_mode, external_recording):
+        return self.angle, self.throttle, self.mode, (self.recording or external_recording)
 
     def run(self, model_path):
         raise Exception("We expect for this part to be run with the threaded=True argument.")
