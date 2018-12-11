@@ -74,6 +74,8 @@ class NucleoController(object):
                 package.append(steering * 16 + throttle)
                 self.serial.write(b'w')
                 self.serial.write(package)
+            steering = 7
+            throttle = 7
 
         self.recording = p_recording or (throttle > 7 and self.mode == 'user')
         
