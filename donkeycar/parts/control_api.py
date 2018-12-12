@@ -54,15 +54,27 @@ class APIController(tornado.web.Application):
 
 class DriveAPI(tornado.web.RequestHandler):
     
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
         if 'drive_mode' in data:
             self.application.mode = data['drive_mode']
         if 'recording' in data:
             self.application.recording = data['recording']
+    def options(self):
+        # no body
+        self.set_status(204)
+        self.finish()
 
 class ConfigAPI(tornado.web.RequestHandler):    
 
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
     def post(self):
         data = tornado.escape.json_decode(self.request.body)
         self.application.config = data
@@ -71,3 +83,7 @@ class ConfigAPI(tornado.web.RequestHandler):
                 self.application.mode = 'local_angle'
             else:
                 self.application.mode = 'user'
+    def options(self):
+        # no body
+        self.set_status(204)
+        self.finish()
