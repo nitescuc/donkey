@@ -17,12 +17,19 @@ import numpy as np
 import keras
 import time
 
+from squeezenet import Squeezenet
+from NVidia import NVidia
+
 import donkeycar as dk
 
 class KerasPilot():
  
     def load(self, model_path):
         print('KERAS loading model: ' + model_path)
+        if model_path.find('squeeze') >= 0:
+            self.model = Squeezenet()
+        else:
+            self.model = NVidia()
         if model_path.endswith('.h5'):
             self.model.load_weights(model_path)
         else:
@@ -82,8 +89,8 @@ class KerasCategorical(KerasPilot):
         super(KerasCategorical, self).__init__(*args, **kwargs)
         if model:
             self.model = model
-        else:
-            self.model = default_categorical()
+#        else:
+#            self.model = default_categorical()
         
     def run(self, img_arr):
         #img_arr = img_arr.reshape((1,) + img_arr.shape)
