@@ -67,7 +67,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimTop=None, trimBottom=None)
-    V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
+    V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False, can_apply_config=True)
 
     steering_controller = PCA9685(cfg.STEERING_CHANNEL)
     steering = PWMSteering(controller=steering_controller,

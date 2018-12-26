@@ -11,9 +11,9 @@ class ImageProcessor:
         self.applyBlur = applyBlur
 
     def apply_config(self, config):
-        if config['apply_clahe']:
+        if 'apply_clahe' in config:
             self.applyClahe = config['apply_clahe']
-        if config['apply_blur']:
+        if 'applyBlur' in config:
             self.applyBlur = config['apply_blur']
 
     def preprocess(self, img):
