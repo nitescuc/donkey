@@ -17,8 +17,8 @@ import numpy as np
 import keras
 import time
 
-from squeezenet import Squeezenet
-from NVidia import NVidia
+from donkeycar.parts.squeezenet import Squeezenet
+from donkeycar.parts.NVidia import NVidia
 
 import donkeycar as dk
 
@@ -41,7 +41,7 @@ class KerasPilot():
     
     
     def apply_config(self, config):
-        if config['model_path']:
+        if 'model_path' in config and config['model_path']:
             self.load(config['model_path'])
 
 
@@ -103,7 +103,7 @@ class KerasCategorical(KerasPilot):
         return np.argmax(angle_binned), (np.argmax(throttle_binned)+8)
     
     def apply_config(self, config):
-        if config['model_path']:
+        if 'model_path' in config and config['model_path']:
             self.load(config['model_path'])
     
 class KerasLinear(KerasPilot):

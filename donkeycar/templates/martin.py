@@ -165,12 +165,12 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
             outputs=['throttle'],
             threaded=True)
 
-    led_display = LedDisplay()
+    led_display = LedDisplay(cfg.LED_RED, cfg.LED_GREEN, cfg.LED_BLUE)
     V.add(led_display, inputs=['user/mode', 'throttle'])
 
     # steering and throttle should be added at the end
     V.add(steering, inputs=['angle'])
-    V.add(throttle, inputs=['throttle', 'user/mode'])
+    V.add(throttle, inputs=['throttle', 'user/mode'], can_apply_config=True)
 
     # add tub to save data
     inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']

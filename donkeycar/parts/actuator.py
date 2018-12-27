@@ -84,6 +84,10 @@ class PWMThrottle:
         self.controller.set_pulse(self.zero_pulse)
         time.sleep(1)
 
+    def apply_config(self, config):
+        if 'max_pulse' in config and config['max_pulse']:
+            self.max_pulse = int(config['max_pulse'])
+
     def reloadKick(self):
         self.kick = [410,410,410,410]
         logger.info('Kicker reloaded')
