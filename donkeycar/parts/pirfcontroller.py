@@ -184,6 +184,8 @@ class PiRfController(object):
     def apply_config(self, config):
         if 'throttle_max' in config and config['throttle_max']:
             self.throttle_tx_max = int(config['throttle_max'])
+        if 'model_path' in config and config['model_path']:
+            self.model_path = config['model_path']
 
     def remapSteering(self, value):
         steering_tx = value

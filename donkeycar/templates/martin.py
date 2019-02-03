@@ -120,11 +120,8 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
 
-    if model_path:
-        kl = KerasCategorical()
-        kl.load(model_path)
-
-        V.add(kl, inputs=['cam/image_array'],
+    kl = KerasCategorical()
+    V.add(kl, inputs=['cam/image_array'],
             outputs=['pilot/angle', 'pilot/throttle'],
             run_condition='run_pilot', can_apply_config=True)
     def discrete_to_float(steering, throttle):
