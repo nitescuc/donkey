@@ -102,10 +102,6 @@ class KerasCategorical(KerasPilot):
 
         return np.argmax(angle_binned), (np.argmax(throttle_binned)+8)
     
-    def apply_config(self, config):
-        if 'model_path' in config and config['model_path']:
-            self.load(config['model_path'])
-    
 class KerasLinear(KerasPilot):
     def __init__(self, model=None, num_outputs=None, *args, **kwargs):
         super(KerasLinear, self).__init__(*args, **kwargs)
