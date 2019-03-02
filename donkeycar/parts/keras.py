@@ -19,6 +19,7 @@ import time
 
 from donkeycar.parts.squeezenet import Squeezenet
 from donkeycar.parts.NVidia import NVidia
+from keras import backend as K
 
 import donkeycar as dk
 
@@ -89,9 +90,10 @@ class KerasCategorical(KerasPilot):
         super(KerasCategorical, self).__init__(*args, **kwargs)
         if model:
             self.model = model
-#        else:
-#            self.model = default_categorical()
-        
+        print('Using FP type: ' + K.floatx())
+        K.set_floatx('float16')
+        print('Using FP type: ' + K.floatx())
+
     def run(self, img_arr):
         #img_arr = img_arr.reshape((1,) + img_arr.shape)
         img_arr = img_arr.reshape((1,120,160,1))

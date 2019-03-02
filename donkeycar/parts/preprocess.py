@@ -29,7 +29,7 @@ class ImageProcessor:
             img = clahe.apply(img)
         
         if self.applyBlur:
-            img = cv2.bilateralFilter(img,9,75,75).reshape(self.resolution[0], self.resolution[1], 1)
+            img = cv2.bilateralFilter(img,9,75,75).reshape(self.resolution[0], self.resolution[1])
         
         return img
 
