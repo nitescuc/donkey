@@ -64,7 +64,7 @@ def drive(cfg):
 #    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     cam = ZmqCamera(remote='tcp://foxcam.local:5555')
     V.add(cam, outputs=['cam/image_array'], threaded=True)
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION)
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=(80,120))
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     #This web controller will create a web server that is capable
@@ -132,6 +132,51 @@ def drive(cfg):
 
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
+def record(cfg):
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    cam = ZmqCamera(remote='tcp://foxcam.local:5555')
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
+    V.add(ctr, 
+        inputs=['pilot/angle', 'pilot/throttle', 'user/mode', 'recording'],
+        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        threaded=False, can_apply_config=True)
+
+    # Choose what inputs should change the car.
+    def drive_mode(mode,
+                   user_angle, user_throttle,
+                   pilot_angle, pilot_throttle):
+        if mode == 'user':
+            return user_angle, user_throttle
+
+        elif mode == 'local_angle':
+            return pilot_angle, user_throttle
+
+        else:
+            return pilot_angle, pilot_throttle
+
+    drive_mode_part = Lambda(drive_mode)
+    V.add(drive_mode_part,
+          inputs=['user/mode', 'user/angle', 'user/throttle',
+                  'pilot/angle', 'pilot/throttle'],
+          outputs=['angle', 'throttle'])
+    
+    # add tub to save data
+    inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']
+    types = ['image_array', 'float', 'float', 'str', 'numpy.float32', 'numpy.float32']
+
+    th = TubHandler(path=cfg.DATA_PATH)
+    tub = th.new_tub_writer(inputs=inputs, types=types)
+    V.add(tub, inputs=inputs, run_condition='recording')
+
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+            max_loop_count=cfg.MAX_LOOPS)
+
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 def calibrate(cfg):
     # Initialize car
@@ -157,6 +202,9 @@ if __name__ == '__main__':
 
     if args['drive']:
         drive(cfg)
+
+    if args['record']:
+        record(cfg)
 
     if args['calibrate']:
         calibrate(cfg)
