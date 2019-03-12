@@ -91,7 +91,7 @@ class KerasCategorical(KerasPilot):
         if model:
             self.model = model
         print('Using FP type: ' + K.floatx())
-        K.set_floatx('float16')
+#        K.set_floatx('float16')
         print('Using FP type: ' + K.floatx())
 
     def run(self, img_arr):

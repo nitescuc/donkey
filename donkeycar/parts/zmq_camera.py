@@ -20,7 +20,7 @@ class ZmqCamera():
         return self.frame
 
     def run_threaded(self):
-        return np.copy(self.frame)
+        return self.frame
 
     def update(self):
         while self.on:

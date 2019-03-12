@@ -7,7 +7,7 @@ class NucleoController(object):
                  serial_device=None,
                  serial_baud=115200,
                  verbose = False,
-                 limit = 0x04
+                 limit = 0x05
                  ):
         self.serial_device = serial_device
         self.serial_baud = serial_baud

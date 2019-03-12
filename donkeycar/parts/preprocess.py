@@ -17,7 +17,8 @@ class ImageProcessor:
             self.applyBlur = config['apply_blur']
 
     def preprocess(self, img):
-        if img.shape[2] != 1:
+        img = np.copy(img)
+        if len(img.shape) > 2 and img.shape[2] != 1:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         if self.trimTop != None:
             img[self.trimTop[0]:self.trimTop[1]] = 0
