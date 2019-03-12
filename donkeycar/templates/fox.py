@@ -5,6 +5,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 Usage:
     manage.py (drive)
     manage.py (calibrate)
+    manage.py (record)
 
 Options:
     -h --help        Show this screen.
@@ -138,6 +139,27 @@ def record(cfg):
 
     cam = ZmqCamera(remote='tcp://foxcam.local:5555')
     V.add(cam, outputs=['cam/image_array'], threaded=True)
+
+    #This web controller will create a web server that is capable
+    #of managing steering, throttle, and modes, and more.
+    ctr = APIController()
+    V.add(ctr, outputs=['user/mode', 'recording', 'config'], threaded=True)
+
+    def apply_config(config):
+        if config != None:
+            V.apply_config(config)
+    apply_config_part = Lambda(apply_config)
+    V.add(apply_config_part, inputs=['config'])
+
+    # See if we should even run the pilot module.
+    # This is only needed because the part run_condition only accepts boolean
+    def pilot_condition(mode):
+        if mode == 'user':
+            return False
+        else:
+            return True
+    pilot_condition_part = Lambda(pilot_condition)
+    V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
