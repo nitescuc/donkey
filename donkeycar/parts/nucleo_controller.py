@@ -70,8 +70,9 @@ class NucleoController(object):
                throttle = 7
         else:
             if throttle != None and steering != None:
+                throttleMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 12, 13, 13, 14]
                 package = bytearray()
-                package.append(steering * 16 + throttle)
+                package.append(steering * 16 + throttleMap[throttle])
                 self.serial.write(b'w')
                 self.serial.write(package)
             steering = 7
