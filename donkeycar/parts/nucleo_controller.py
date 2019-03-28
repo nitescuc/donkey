@@ -7,7 +7,7 @@ class NucleoController(object):
                  serial_device=None,
                  serial_baud=115200,
                  verbose = False,
-                 limit = 0x05
+                 limit = 64
                  ):
         self.serial_device = serial_device
         self.serial_baud = serial_baud
@@ -21,7 +21,12 @@ class NucleoController(object):
         self.serial_init()
 
     def apply_config(self, config):
-        pass
+        if 'limit' in config and config['limit']:
+            self.limit = int(config['limit'])
+            self.serial.write(b'L')
+            packet = bytearray()
+            packet.append(self.limit)
+            self.serial.write(packet)
 
     def serial_init(self):
         self.serial = serial.Serial(self.serial_device, self.serial_baud, timeout=5)

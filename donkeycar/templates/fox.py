@@ -35,8 +35,8 @@ from docopt import docopt
 import donkeycar as dk
 
 # import parts
-#from donkeycar.parts.camera import Webcam
-from donkeycar.parts.zmq_camera import ZmqCamera
+from donkeycar.parts.camera import Webcam
+#from donkeycar.parts.zmq_camera import ZmqCamera
 from donkeycar.parts.camera_calibrate import ImageCalibrate
 from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
@@ -62,8 +62,7 @@ def drive(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-#    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
-    cam = ZmqCamera(remote='tcp://foxcam.local:5555')
+    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=(80,120))
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
@@ -137,7 +136,7 @@ def record(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    cam = ZmqCamera(remote='tcp://foxcam.local:5555')
+    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
 
     #This web controller will create a web server that is capable
@@ -204,8 +203,7 @@ def calibrate(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-#    cam = Webcam(resolution=(480,640), framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
-    cam = ZmqCamera(remote='tcp://foxcam.local:5555')
+    cam = Webcam(resolution=(480,640), framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     calibrate = ImageCalibrate((480,640))
     V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)

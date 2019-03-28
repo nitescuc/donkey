@@ -7,8 +7,8 @@ class ImageCalibrate:
         self.resolution = resolution
 
     def preprocess(self, img):
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        img = cv2.resize(img, (self.resolution[1], self.resolution[0]))
+        #img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        #img = cv2.resize(img, (self.resolution[1], self.resolution[0]))
         resolution = self.resolution
         xLen = resolution[1]
         yLen = resolution[0]
