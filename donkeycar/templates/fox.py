@@ -43,6 +43,7 @@ from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.nucleo_controller import NucleoController
+from donkeycar.parts.speed_controller import SpeedController
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 
@@ -93,8 +94,14 @@ def drive(cfg):
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', can_apply_config=True)
 
-    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, 
-        slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THORTTLE, fast_throttle=cfg.FAST_THROTTLE)
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
+    V.add(ctr,
+        inputs=['pilot/throttle', 'user/mode'],
+        outputs=['pilot/throttle'],
+        run_condition='run_pilot',
+        threaded=False)
+
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, limit=cfg.THROTTLE_NUCLEO_LIMIT)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode', 'recording'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],

@@ -8,25 +8,14 @@ class NucleoController(object):
                  serial_device=None,
                  serial_baud=115200,
                  verbose = False,
-                 limit = 64,
-                 slow_throttle = 10,
-                 medium_throttle = 12,
-                 fast_throttle = 14
+                 limit = 64
                  ):
         self.serial_device = serial_device
         self.serial_baud = serial_baud
         self.recording = False
         self.limit = limit
-        self.slow_throttle = slow_throttle
-        self.medium_throttle = medium_throttle
-        self.fast_throttle = fast_throttle
         self.echo = False
         self.serialInitialized = False
-        
-        self.speed = 0
-        self.breakSeq = deque([])
-        self.throttleMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, self.slow_throttle, 11, self.medium_throttle, 13, self.fast_throttle]
-
         self.mode = None
 
         self.serial_init()
@@ -92,19 +81,9 @@ class NucleoController(object):
                throttle = 7
         else:
             if throttle != None and steering != None:
-                # break management
-                if throttle >= 12:
-                    self.speed = self.speed + 1
-                elif throttle < 12:
-                    print('Speed: ' + str(self.speed))
-                    if self.speed > 10:
-                        self.breakSeq.extend([0,0])
-                    self.speed = 0
-                if len(self.breakSeq):
-                    throttle = self.breakSeq.popleft()
                 # send throttle
                 package = bytearray()
-                package.append(steering * 16 + self.throttleMap[throttle])
+                package.append(steering * 16 + throttle)
                 self.serial.write(b'w')
                 self.serial.write(package)
             steering = 7

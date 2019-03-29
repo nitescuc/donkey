@@ -45,6 +45,7 @@ from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.pirfcontroller import PiRfController
+from donkeycar.parts.speed_controller import SpeedController
 from donkeycar.parts.sonar import SonarController
 from donkeycar.parts.led_display import LedDisplay
 
@@ -124,9 +125,15 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     V.add(kl, inputs=['cam/image_array'],
             outputs=['pilot/angle', 'pilot/throttle'],
             run_condition='run_pilot', can_apply_config=True)
+
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
+    V.add(ctr,
+        inputs=['pilot/throttle', 'user/mode'],
+        outputs=['pilot/throttle'],
+        run_condition='run_pilot',
+        threaded=False)
+
     def discrete_to_float(steering, throttle):
-        throttleMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-        throttle = throttleMap[int(throttle)]
         st = steering * (2/14) - 1
         th = throttle * (2/14) - 1
         return st, th
