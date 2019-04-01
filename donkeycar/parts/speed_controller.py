@@ -5,11 +5,13 @@ class SpeedController(object):
     def __init__(self,
                  slow_throttle = 10,
                  medium_throttle = 12,
-                 fast_throttle = 14
+                 fast_throttle = 14,
+                 break_sequence = [0,0,0,0,0]
                  ):
         self.slow_throttle = slow_throttle
         self.medium_throttle = medium_throttle
         self.fast_throttle = fast_throttle
+        self.break_sequence = break_sequence
         
         self.speed = 0
         self.breakSeq = deque([])
@@ -26,7 +28,7 @@ class SpeedController(object):
             elif p_throttle < 12:
                 print('Speed: ' + str(self.speed))
                 if self.speed > 10:
-                    self.breakSeq.extend([0,0])
+                    self.breakSeq.extend(self.break_sequence)
                 self.speed = 0
             if len(self.breakSeq):
                 p_throttle = self.breakSeq.popleft()

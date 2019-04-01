@@ -65,7 +65,7 @@ def drive(cfg):
 
     cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=(80,120))
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=cfg.CAMERA_TRIM_BOTTOM)
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     #This web controller will create a web server that is capable
@@ -94,7 +94,7 @@ def drive(cfg):
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', can_apply_config=True)
 
-    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, cfg.BREAK_SEQUENCE)
     V.add(ctr,
         inputs=['pilot/throttle', 'user/mode'],
         outputs=['pilot/throttle'],
