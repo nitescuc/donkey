@@ -94,7 +94,7 @@ def drive(cfg):
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', can_apply_config=True)
 
-    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, cfg.BREAK_SEQUENCE)
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, break_sequence=cfg.BREAK_SEQUENCE)
     V.add(ctr,
         inputs=['pilot/throttle', 'user/mode'],
         outputs=['pilot/throttle'],

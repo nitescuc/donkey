@@ -26,11 +26,12 @@ class SpeedController(object):
             if p_throttle >= 12:
                 self.speed = self.speed + 1
             elif p_throttle < 12:
-                print('Speed: ' + str(self.speed))
+                #print('Speed: ' + str(self.speed))
                 if self.speed > 10:
                     self.breakSeq.extend(self.break_sequence)
                 self.speed = 0
             if len(self.breakSeq):
+                print('break')
                 p_throttle = self.breakSeq.popleft()
             return self.throttleMap[p_throttle]
             
