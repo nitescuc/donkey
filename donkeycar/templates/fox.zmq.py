@@ -35,8 +35,7 @@ from docopt import docopt
 import donkeycar as dk
 
 # import parts
-#from donkeycar.parts.camera import Webcam
-from donkeycar.parts.zmq_camera import ZmqCamera
+from donkeycar.parts.camera import Webcam
 from donkeycar.parts.camera_calibrate import ImageCalibrate
 from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
@@ -45,6 +44,9 @@ from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.nucleo_controller import NucleoController
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
+from donkeycar.parts.zmq_speed_sensor import ZmqSpeedSensor
+from donkeycar.parts.zmq_distance_sensor import ZmqDistanceSensor
+from donkeycar.parts.speed_controller import SpeedController
 
 from sys import platform
 
@@ -62,8 +64,7 @@ def drive(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-#    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
-    cam = ZmqCamera(remote=cfg.ZMQ_CAMERA)
+    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=(80,120))
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
@@ -93,6 +94,16 @@ def drive(cfg):
     V.add(kl, inputs=['cam/image_array'],
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', can_apply_config=True)
+
+    # Speed sensor
+    speed_sensor = ZmqSpeedSensor(remote=cfg.ZMQ_SPEED)
+    V.add(speed_sensor, inputs=[], outputs=['speed']);
+    # Distance sensor
+    dist_sensor = ZmqDistanceSensor(remote=cfg.ZMQ_DISTANCE)
+    V.add(dist_sensor, inputs=[], outputs=['distance']);
+
+    # Speed controller
+    speed_ctr = SpeedController()
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
@@ -137,7 +148,7 @@ def record(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    cam = ZmqCamera(remote=cfg.ZMQ_CAMERA)
+    cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
 
     #This web controller will create a web server that is capable
@@ -160,6 +171,14 @@ def record(cfg):
             return True
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
+
+    # Speed sensor
+    speed_sensor = ZmqSpeedSensor(remote=cfg.ZMQ_SPEED)
+    V.add(speed_sensor, inputs=[], outputs=['speed'], threaded=True)
+    # Distance sensor
+    dist_sensor = ZmqDistanceSensor(remote=cfg.ZMQ_DISTANCE)
+    V.add(dist_sensor, inputs=[], outputs=['distance'], threaded=True)
+    # Speed controller
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
@@ -187,8 +206,8 @@ def record(cfg):
           outputs=['angle', 'throttle'])
     
     # add tub to save data
-    inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle']
-    types = ['image_array', 'float', 'float', 'str', 'numpy.float32', 'numpy.float32']
+    inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'pilot/angle', 'pilot/throttle', 'speed', 'distance']
+    types = ['image_array', 'float', 'float', 'str', 'numpy.float32', 'numpy.float32', 'float', 'float']
 
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types)
@@ -204,8 +223,7 @@ def calibrate(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-#    cam = Webcam(resolution=(480,640), framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
-    cam = ZmqCamera(remote=cfg.ZMQ_CAMERA)
+    cam = Webcam(resolution=(480,640), framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
     calibrate = ImageCalibrate((480,640))
     V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)

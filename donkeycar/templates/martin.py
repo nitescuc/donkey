@@ -46,6 +46,7 @@ from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.pirfcontroller import PiRfController
 from donkeycar.parts.speed_controller import SpeedController
+from donkeycar.parts.break_controller import BreakController
 from donkeycar.parts.sonar import SonarController
 from donkeycar.parts.led_display import LedDisplay
 
@@ -126,20 +127,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
             outputs=['pilot/angle', 'pilot/throttle'],
             run_condition='run_pilot', can_apply_config=True)
 
-    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
-    V.add(ctr,
-        inputs=['pilot/throttle', 'user/mode'],
-        outputs=['pilot/throttle'],
-        run_condition='run_pilot',
-        threaded=False)
-
-    def discrete_to_float(steering, throttle):
-        st = steering * (2/14) - 1
-        th = throttle * (2/14) - 1
-        return st, th
-    discrete_to_float_part = Lambda(discrete_to_float)
-    V.add(discrete_to_float_part, inputs=['pilot/angle', 'pilot/throttle'], outputs=['pilot/angle', 'pilot/throttle'], run_condition='run_pilot')    
-
     # Choose what inputs should change the car.
     def drive_mode(mode,
                    user_angle, user_throttle,
@@ -159,17 +146,37 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                   'pilot/angle', 'pilot/throttle'],
           outputs=['angle', 'throttle'])
     
-    if use_sonar:
-        sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
-                            echo_pin=cfg.SON_ECHO_PIN,
-                            slowdown_limit=cfg.SON_SLOWDONW,
-                            break_limit=cfg.SON_BREAK,
-                            verbose = cfg.SON_VERBOSE
-                            )
-        V.add(sonar,
-            inputs=['throttle'],
-            outputs=['throttle'],
-            threaded=True)
+    ctr = SpeedController()
+    V.add(ctr,
+        inputs=['throttle', 'user/mode'],
+        outputs=['speed'],
+        run_condition='run_pilot',
+        threaded=False)
+
+    sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
+                        echo_pin=cfg.SON_ECHO_PIN,
+                        slowdown_limit=cfg.SON_SLOWDONW,
+                        break_limit=cfg.SON_BREAK,
+                        verbose = cfg.SON_VERBOSE
+                        )
+    V.add(sonar,
+        inputs=['throttle', 'speed'],
+        outputs=['throttle'],
+        threaded=True)
+
+    ctr = BreakController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
+    V.add(ctr,
+        inputs=['throttle', 'user/mode'],
+        outputs=['throttle'],
+        run_condition='run_pilot',
+        threaded=False)
+
+    def discrete_to_float(steering, throttle):
+        st = steering * (2/14) - 1
+        th = throttle * (2/14) - 1
+        return st, th
+    discrete_to_float_part = Lambda(discrete_to_float)
+    V.add(discrete_to_float_part, inputs=['angle', 'throttle'], outputs=['angle', 'throttle'], run_condition='run_pilot')    
 
     led_display = LedDisplay(cfg.LED_RED, cfg.LED_GREEN, cfg.LED_BLUE)
     V.add(led_display, inputs=['user/mode', 'throttle'])

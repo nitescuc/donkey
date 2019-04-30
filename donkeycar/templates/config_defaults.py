@@ -20,6 +20,10 @@ CAR_PATH = PACKAGE_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(CAR_PATH, 'data')
 MODELS_PATH = os.path.join(CAR_PATH, 'models')
 
+#DEVICES
+ZMQ_SPEED = 'tcp://10.42.0.99:5555'
+ZMQ_DISTANCE = 'tcp://10.42.0.99:5555'
+
 #VEHICLE
 DRIVE_LOOP_HZ = 30
 MAX_LOOPS = 100000

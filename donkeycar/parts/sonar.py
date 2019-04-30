@@ -133,7 +133,7 @@ class SonarController(object):
                 print('sonar= {:01.2f}'.format(self.distance))
             time.sleep(self.poll_delay)
 
-    def run_threaded(self, throttle):
+    def run_threaded(self, throttle, speed):
         if throttle < 0.1:
             return throttle
         #print('throttle={:01.2f}', throttle)
@@ -143,7 +143,8 @@ class SonarController(object):
             if self.distance <= self._break_limit+500:
                 return -1
             else:
-                return (throttle * (self.distance - self._break_limit))/(self._slowdown_limit - self._break_limit)
+                # ensure throttle always positive before break
+                return (throttle * (0.5 + self.distance - self._break_limit))/(self._slowdown_limit - self._break_limit)
         return throttle
 
     def run(self, img_arr=None):
