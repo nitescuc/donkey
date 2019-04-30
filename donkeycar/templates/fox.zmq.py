@@ -66,7 +66,7 @@ def drive(cfg):
 
     cam = Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=(80,120))
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimBottom=cfg.CAMERA_TRIM_BOTTOM)
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
 
     #This web controller will create a web server that is capable
@@ -97,13 +97,13 @@ def drive(cfg):
 
     # Speed sensor
     speed_sensor = ZmqSpeedSensor(remote=cfg.ZMQ_SPEED)
-    V.add(speed_sensor, inputs=[], outputs=['speed']);
+    V.add(speed_sensor, inputs=[], outputs=['speed'], threaded=True);
     # Distance sensor
     dist_sensor = ZmqDistanceSensor(remote=cfg.ZMQ_DISTANCE)
-    V.add(dist_sensor, inputs=[], outputs=['distance']);
+    V.add(dist_sensor, inputs=[], outputs=['distance'], threaded=True);
 
     # Speed controller
-    speed_ctr = SpeedController()
+#    speed_ctr = SpeedController()
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
