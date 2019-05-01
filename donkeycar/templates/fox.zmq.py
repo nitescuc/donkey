@@ -103,7 +103,12 @@ def drive(cfg):
     V.add(dist_sensor, inputs=[], outputs=['distance'], threaded=True);
 
     # Speed controller
-#    speed_ctr = SpeedController()
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, break_sequence=cfg.BREAK_SEQUENCE)
+    V.add(ctr,
+        inputs=['pilot/throttle', 'user/mode', 'speed', 'distance'],
+        outputs=['pilot/throttle'],
+        run_condition='run_pilot',
+        threaded=False)
 
     ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
     V.add(ctr, 
