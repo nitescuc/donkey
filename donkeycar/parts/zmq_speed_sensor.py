@@ -15,6 +15,7 @@ class ZmqSpeedSensor():
         self.on = True
 
         self.last_time = time.time() + 5
+        self.speed = 0
 
     def run(self):
         [address, speed] = self.subscriber.recv_multipart()
@@ -30,7 +31,7 @@ class ZmqSpeedSensor():
             self.speed = float(speed)/1000
             tt = time.time()
             if self.last_time < tt:
-                self.last_time = tt + 5
+                self.last_time = tt + 1
                 print('Speed ' + str(self.speed))
 
     def shutdown(self):
