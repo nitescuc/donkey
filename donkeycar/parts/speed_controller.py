@@ -22,17 +22,20 @@ class SpeedController(object):
     def run(self, p_throttle, p_mode, p_speed, p_distance):
         if p_distance < 60:
             print('Distance break')
-            return 0
+#            return 0
         if p_mode == 'user':
             return p_throttle
         else:
             # break management
-            if p_throttle < 12:
-                #print('Speed: ' + str(self.speed))
-                self.breakSeq.extend(self.break_sequence)
+            if p_throttle >= 12:
+                self.speed = self.speed + 1
+            elif p_throttle < 12:
+                if self.speed > 10:
+                    self.breakSeq.extend(self.break_sequence)
+                self.speed = 0
             if len(self.breakSeq):
-                print('break')
-                print("Speed " + str(p_speed))
+#                print('break')
+#                print("Speed " + str(p_speed))
                 p_throttle = self.breakSeq.popleft()
             return self.throttleMap[p_throttle]
 
