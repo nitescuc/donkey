@@ -110,7 +110,7 @@ def drive(cfg):
         run_condition='run_pilot',
         threaded=False)
 
-    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD)
+    ctr = NucleoController(cfg.SERIAL_DEVICE, cfg.SERIAL_BAUD, limit=cfg.THROTTLE_NUCLEO_LIMIT)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode', 'recording'],
         outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
