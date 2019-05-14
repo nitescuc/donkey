@@ -144,7 +144,8 @@ class SonarController(object):
                 return -1
             else:
                 # ensure throttle always positive before break
-                return (throttle * (0.5 + self.distance - self._break_limit))/(self._slowdown_limit - self._break_limit)
+                #return (throttle * (self.distance - self._break_limit))/(self._slowdown_limit - self._break_limit)
+                return throttle * (self.distance + self._slowdown_limit - 2*self._break_limit)/(2 * (self._slowdown_limit - self._break_limit))
         return throttle
 
     def run(self, img_arr=None):
