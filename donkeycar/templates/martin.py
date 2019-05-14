@@ -149,24 +149,6 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
     ctr = SpeedController()
     V.add(ctr,
         inputs=['throttle', 'user/mode'],
-        outputs=['speed'],
-        run_condition='run_pilot',
-        threaded=False)
-
-    sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
-                        echo_pin=cfg.SON_ECHO_PIN,
-                        slowdown_limit=cfg.SON_SLOWDONW,
-                        break_limit=cfg.SON_BREAK,
-                        verbose = cfg.SON_VERBOSE
-                        )
-    V.add(sonar,
-        inputs=['throttle', 'speed'],
-        outputs=['throttle'],
-        threaded=True)
-
-    ctr = BreakController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
-    V.add(ctr,
-        inputs=['throttle', 'user/mode'],
         outputs=['throttle'],
         run_condition='run_pilot',
         threaded=False)
@@ -177,6 +159,18 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
         return st, th
     discrete_to_float_part = Lambda(discrete_to_float)
     V.add(discrete_to_float_part, inputs=['angle', 'throttle'], outputs=['angle', 'throttle'], run_condition='run_pilot')    
+
+    # MUST be after discrete_to_float
+    sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
+                        echo_pin=cfg.SON_ECHO_PIN,
+                        slowdown_limit=cfg.SON_SLOWDONW,
+                        break_limit=cfg.SON_BREAK,
+                        verbose = cfg.SON_VERBOSE
+                        )
+    V.add(sonar,
+        inputs=['throttle', 'speed'],
+        outputs=['throttle'],
+        threaded=True)
 
     led_display = LedDisplay(cfg.LED_RED, cfg.LED_GREEN, cfg.LED_BLUE)
     V.add(led_display, inputs=['user/mode', 'throttle'])
