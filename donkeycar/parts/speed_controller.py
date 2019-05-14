@@ -20,7 +20,7 @@ class SpeedController(object):
 
 
     def run(self, p_throttle, p_mode, p_speed, p_distance):
-        if p_distance < 60:
+        if p_distance != None and p_distance < 60:
             print('Distance break')
 #            return 0
         if p_mode == 'user':
