@@ -46,7 +46,6 @@ from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.pirfcontroller import PiRfController
 from donkeycar.parts.speed_controller import SpeedController
-from donkeycar.parts.break_controller import BreakController
 from donkeycar.parts.sonar import SonarController
 from donkeycar.parts.led_display import LedDisplay
 
@@ -68,7 +67,7 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
 
     cam = PiCamera(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE)
     V.add(cam, outputs=['cam/image_array'], threaded=True)
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimTop=None, trimBottom=None)
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, trimTop=None, trimBottom=None, applyClahe=True, applyBlur=True)
     V.add(preprocess, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False, can_apply_config=True)
 
     steering_controller = PCA9685(cfg.STEERING_CHANNEL)
