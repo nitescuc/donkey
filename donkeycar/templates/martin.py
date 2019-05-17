@@ -145,16 +145,20 @@ def drive(cfg, model_path=None, use_joystick=False, use_tx=False, use_pirf=False
                   'pilot/angle', 'pilot/throttle'],
           outputs=['angle', 'throttle'])
     
-    ctr = SpeedController()
+    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, break_sequence=cfg.BREAK_SEQUENCE)
     V.add(ctr,
         inputs=['throttle', 'user/mode'],
         outputs=['throttle'],
         run_condition='run_pilot',
         threaded=False)
 
-    def discrete_to_float(steering, throttle):
+    def discrete_to_float(steering, throttle, mode):
+        if mode == 'local_angle':
+            th = throttle
+        else:
+            th = throttle * (2/14) - 1
         st = steering * (2/14) - 1
-        th = throttle * (2/14) - 1
+        
         return st, th
     discrete_to_float_part = Lambda(discrete_to_float)
     V.add(discrete_to_float_part, inputs=['angle', 'throttle'], outputs=['angle', 'throttle'], run_condition='run_pilot')    
