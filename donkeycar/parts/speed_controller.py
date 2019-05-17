@@ -31,6 +31,7 @@ class SpeedController(object):
             # break management
             if p_throttle >= 12:
                 self.speed = self.speed + 1
+                self.breakSeq.clear()
             elif p_throttle < 12:
                 if self.speed > 10:
                     self.breakSeq.extend(self.break_sequence)
