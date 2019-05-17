@@ -133,7 +133,7 @@ class SonarController(object):
                 print('sonar= {:01.2f}'.format(self.distance))
             time.sleep(self.poll_delay)
 
-    def run_threaded(self, throttle, speed):
+    def run_threaded(self, throttle, speed=None):
         if throttle < 0.1:
             return throttle
         #print('throttle={:01.2f}', throttle)
