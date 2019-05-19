@@ -23,7 +23,8 @@ class SpeedController(object):
 
     def run(self, p_throttle, p_mode, p_speed = None, p_distance = None):
         if p_distance != None and p_distance < self.distance_break_limit:
-            print('Distance break')
+            pass
+#            print('Distance break')
 #            return 0
         if p_mode != 'local':
             return p_throttle

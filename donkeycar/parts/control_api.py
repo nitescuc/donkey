@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import re
 
 import requests
 
@@ -79,7 +80,20 @@ class ConfigAPI(tornado.web.RequestHandler):
         data = tornado.escape.json_decode(self.request.body)
         self.application.config = data
         if 'model_path' in data:
+            model_path = data['model_path']
             if data['model_path'] != '':
+                if model_path.find('-blur-') >= 0:
+                    data['apply_blur'] = True
+                if model_path.find('-clahe-') >= 0:
+                    data['apply_clahe'] = True
+                if model_path.find('-crop') >= 0:
+                    crop_data = re.match(r"-crop(\d*)-", model_path)
+                    print(crop_data.groups())
+                    crop_level = int(crop_data.groups()[0])
+                    if crop_level > 60:
+                        data['crop_bottom'] = crop_level
+                    else
+                        data['crop_top'] = crop_level
                 self.application.mode = 'local_angle'
             else:
                 self.application.mode = 'user'

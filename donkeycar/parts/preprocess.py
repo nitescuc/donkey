@@ -3,7 +3,7 @@ import cv2
 
 
 class ImageProcessor:
-    def __init__(self, resolution=(120, 160), trimTop=None, trimBottom=None, applyClahe=True, applyBlur=False):
+    def __init__(self, resolution=(120, 160), trimTop=None, trimBottom=None, applyClahe=False, applyBlur=False):
         self.resolution = resolution
         self.trimTop = trimTop
         self.trimBottom = trimBottom
@@ -12,9 +12,10 @@ class ImageProcessor:
 
     def apply_config(self, config):
         if 'apply_clahe' in config:
+            print('Applying config clahe ' + str(config['apply_clahe']))
             self.applyClahe = config['apply_clahe']
         if 'apply_blur' in config:
-            print('apply blur: ' + str(config['apply_blur']))
+            print('Applying config blur ' + str(config['apply_blur']))
             self.applyBlur = config['apply_blur']
 
     def preprocess(self, img):
