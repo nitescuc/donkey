@@ -11,7 +11,7 @@ class BaseCamera:
         return np.copy(self.frame)
 
 class PiCamera(BaseCamera):
-    def __init__(self, resolution=(120, 160), framerate=20):
+    def __init__(self, resolution=(120, 160), framerate=20, brightness = 0, rotate = 0, processor = None):
         from picamera.array import PiRGBArray
         from picamera import PiCamera
         resolution = (resolution[1], resolution[0])
@@ -65,7 +65,7 @@ class PiCamera(BaseCamera):
         self.camera.close()
 
 class Webcam(BaseCamera):
-    def __init__(self, resolution = (120, 160), framerate = 20, brightness = 0, rotate = 0):
+    def __init__(self, resolution = (120, 160), framerate = 20, brightness = 0, rotate = 0, processor = None):
         from PyV4L2Camera.camera import Camera
         from PyV4L2Camera.controls import ControlIDs
 
@@ -111,7 +111,7 @@ class Webcam(BaseCamera):
         time.sleep(.5)
 
 class PyGameWebcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20):
+    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0, rotate = 0, processor = None):
         import pygame
         import pygame.camera
 
@@ -164,16 +164,18 @@ class PyGameWebcam(BaseCamera):
         time.sleep(.5)
 
 class CV2Webcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20):
+    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0, rotate = 0, processor = None):
         super().__init__()
 
-        cam = cv2.VideoCapture(0)
+        self.resolution = resolution
+        self.framerate = framerate
+        self.processor = processor
+
+        cam = self._create_cam()
         if not cam.isOpened():
             raise IOError("Cannot open webcam")
         
         self.cam = cam
-        self.resolution = resolution
-        self.framerate = framerate
 
         # initialize variable used to indicate
         # if the thread should be stopped
@@ -182,17 +184,19 @@ class CV2Webcam(BaseCamera):
 
         print('WebcamVideoStream loaded.. .warming camera')
 
-    def update(self):
-        from datetime import datetime, timedelta
-        while self.on:
-            start = datetime.now()
-            ret, frame = self.cam.read()
-            self.frame = cv2.resize(frame, self.resolution)
+    def _create_cam(self):
+        return cv2.VideoCapture(0)
 
-            stop = datetime.now()
-            s = 1 / self.framerate - (stop - start).total_seconds()
-            if s > 0:
-                time.sleep(s)
+    def update(self):
+        while self.on:
+            ret, frame = self.cam.read()
+            if ret:
+                if self.processor != None:
+                    frame = self.processor.processFrame(frame)
+                self.frame = frame
+            else:
+                break
+#            self.frame = cv2.resize(frame, self.resolution)
 
     def run_threaded(self):
         return self.frame
@@ -202,6 +206,17 @@ class CV2Webcam(BaseCamera):
         self.on = False
         print('stoping Webcam')
         time.sleep(.5)
+        self.cam.release()
+
+
+class JetsonCV2Webcam(CV2Webcam):
+    def _create_cam(self):
+        return cv2.VideoCapture(self._gst_str(), cv2.CAP_GSTREAMER)
+
+    def _gst_str(self):
+        return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=%d, height=%d, format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (
+            self.resolution[0], self.resolution[1], self.framerate, self.resolution[0], self.resolution[1])
+
 
 class MockCamera(BaseCamera):
     '''
