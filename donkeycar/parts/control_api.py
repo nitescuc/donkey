@@ -92,7 +92,7 @@ class ConfigAPI(tornado.web.RequestHandler):
                     crop_level = int(crop_data.groups()[0])
                     if crop_level > 60:
                         data['crop_bottom'] = crop_level
-                    else
+                    else:
                         data['crop_top'] = crop_level
                 self.application.mode = 'local_angle'
             else:
