@@ -10,6 +10,7 @@ class ImageProcessor:
         self.applyClahe = applyClahe
         self.applyBlur = applyBlur
 
+
     def apply_config(self, config):
         if 'apply_clahe' in config:
             print('Applying config clahe ' + str(config['apply_clahe']))
@@ -17,6 +18,7 @@ class ImageProcessor:
         if 'apply_blur' in config:
             print('Applying config blur ' + str(config['apply_blur']))
             self.applyBlur = config['apply_blur']
+
 
     def preprocess(self, img):
         img = np.copy(img)
@@ -35,6 +37,11 @@ class ImageProcessor:
             img = cv2.bilateralFilter(img,9,75,75).reshape(self.resolution[0], self.resolution[1])
         
         return img
+
+
+    def processFrame(self, img):
+        return self.preprocess(img)
+
 
     def run(self, image):
         return self.preprocess(image)
