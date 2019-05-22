@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""
+Scripts to drive a donkey 2 car and train a model for it. 
+
+Usage:
+    manage.py (drive)
+    manage.py (calibrate)
+    manage.py (record)
+
+Options:
+    -h --help        Show this screen.
+    --tub TUBPATHS   List of paths to tubs. Comma separated. Use quotes to use wildcards. ie "~/tubs/*"
+    --js             Use physical joystick.
+"""
+import os
+import logging
+# set up logging to file - see previous section for more details
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s.%(msecs)03d %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M:%S',
+                    filename='data/donkey.log',
+                    filemode='w')
+# define a Handler which writes INFO messages or higher to the sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.ERROR)
+# set a format which is simpler for console use
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+# tell the handler to use this format
+console.setFormatter(formatter)
+# add the handler to the root logger
+logging.getLogger('').addHandler(console)
+
+from docopt import docopt
+
+import donkeycar as dk
+
+# import parts
+from donkeycar.parts.camera import JetsonCV2Webcam
+#from donkeycar.parts.camera_calibrate import ImageCalibrate
+from donkeycar.parts.preprocess import ImageProcessor
+from donkeycar.parts.transform import Lambda
+from donkeycar.parts.keras import KerasCategorical
+#from donkeycar.parts.datastore import TubHandler, TubGroup
+from donkeycar.parts.zmq_actuator_emitter import ZmqActuatorEmitter
+from donkeycar.parts.zmq_config_client import ZmqConfigClient
+#from donkeycar.parts.control_api import APIController
+#from donkeycar.parts.web_fpv.web import FPVWebController
+
+from sys import platform
+
+def drive(cfg):
+    '''
+    Start the drive loop
+    Each part runs as a job in the Vehicle loop, calling either
+    it's run or run_threaded method depending on the constructor flag `threaded`.
+    All parts are updated one after another at the framerate given in
+    cfg.DRIVE_LOOP_HZ assuming each part finishes processing in a timely manner.
+    Parts may have named outputs and inputs. The framework handles passing named outputs
+    to parts requesting the same named input.
+    '''
+
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, applyClahe=True, applyBlur=True)
+    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS, processor=preprocess)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+
+    ctr = ZmqConfigClient(remote=cfg.ZMQ_CONFIG)
+    V.add(ctr, 
+        inputs=[],
+        outputs=['config', 'user/mode'],
+        threaded=True, can_apply_config=True)
+
+    def apply_config(config):
+        if config != None:
+            V.apply_config(config)
+    apply_config_part = Lambda(apply_config)
+    V.add(apply_config_part, inputs=['config'])
+
+    # See if we should even run the pilot module.
+    # This is only needed because the part run_condition only accepts boolean
+    def pilot_condition(mode):
+        if mode == 'user':
+            return False
+        else:
+            return True
+    pilot_condition_part = Lambda(pilot_condition)
+    V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
+
+    kl = KerasCategorical()
+    V.add(kl, inputs=['cam/image_array'],
+        outputs=['pilot/angle', 'pilot/throttle'],
+        run_condition='run_pilot', 
+        threaded=False, can_apply_config=True)
+
+    ctr = ZmqActuatorEmitter(binding=cfg.ZMQ_ACTUATOR_EMITTER)
+    V.add(ctr, 
+        inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
+        outputs=[],
+        threaded=True, can_apply_config=True)
+
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+            max_loop_count=cfg.MAX_LOOPS)
+
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
+
+def record(cfg):
+    pass
+
+
+def calibrate(cfg):
+    pass
+
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    cfg = dk.load_config()
+
+    if args['drive']:
+        drive(cfg)
+
+    if args['record']:
+        record(cfg)
+
+    if args['calibrate']:
+        calibrate(cfg)
+
+
+
+
