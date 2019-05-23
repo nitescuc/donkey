@@ -36,15 +36,15 @@ import donkeycar as dk
 
 # import parts
 from donkeycar.parts.camera import JetsonCV2Webcam
-#from donkeycar.parts.camera_calibrate import ImageCalibrate
+from donkeycar.parts.camera_calibrate import ImageCalibrate
 from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 #from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.zmq_actuator_emitter import ZmqActuatorEmitter
 from donkeycar.parts.zmq_config_client import ZmqConfigClient
-#from donkeycar.parts.control_api import APIController
-#from donkeycar.parts.web_fpv.web import FPVWebController
+from donkeycar.parts.control_api import APIController
+from donkeycar.parts.web_fpv.web import FPVWebController
 
 from sys import platform
 
@@ -62,21 +62,18 @@ def drive(cfg):
     # Initialize car
     V = dk.vehicle.Vehicle()
 
-    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, applyClahe=True, applyBlur=True)
-    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS, processor=preprocess)
-    V.add(cam, outputs=['cam/image_array'], threaded=True)
-
-    ctr = ZmqConfigClient(remote=cfg.ZMQ_CONFIG)
-    V.add(ctr, 
-        inputs=[],
-        outputs=['config', 'user/mode'],
-        threaded=True, can_apply_config=True)
+    ctr = APIController()
+    V.add(ctr, outputs=['user/mode', 'recording', 'config'], threaded=True)
 
     def apply_config(config):
         if config != None:
             V.apply_config(config)
     apply_config_part = Lambda(apply_config)
     V.add(apply_config_part, inputs=['config'])
+
+    preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, applyClahe=True, applyBlur=True)
+    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS, processor=preprocess)
+    V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
 
     # See if we should even run the pilot module.
     # This is only needed because the part run_condition only accepts boolean
@@ -111,7 +108,22 @@ def record(cfg):
 
 
 def calibrate(cfg):
-    pass
+    # Initialize car
+    V = dk.vehicle.Vehicle()
+
+    cam = JetsonCV2Webcam(resolution=(480, 640), framerate=cfg.CAMERA_FRAMERATE)
+    V.add(cam, outputs=['cam/image_array'], threaded=True)
+    calibrate = ImageCalibrate((480,640))
+    V.add(calibrate, inputs=['cam/image_array'], outputs=['cam/image_array'], threaded=False)
+
+    fpv = FPVWebController()
+    V.add(fpv,
+            inputs=['cam/image_array'],
+            threaded=True)        
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
+            max_loop_count=cfg.MAX_LOOPS)
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
 if __name__ == '__main__':

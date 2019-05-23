@@ -6,9 +6,17 @@ import glob
 import cv2
 
 class BaseCamera:
+    def __init__(self, resolution=(120, 160), framerate=20, brightness = 0, rotate = 0, processor = None):
+        self.resolution = resolution
+        self.framerate = framerate
+        self.processor = processor
 
     def run_threaded(self):
         return np.copy(self.frame)
+
+    def apply_config(self, config):
+        if self.processor != None:
+            self.processor.apply_config(config)
 
 class PiCamera(BaseCamera):
     def __init__(self, resolution=(120, 160), framerate=20, brightness = 0, rotate = 0, processor = None):
@@ -19,6 +27,7 @@ class PiCamera(BaseCamera):
         self.camera = PiCamera() #PiCamera gets resolution (height, width)
         self.camera.resolution = resolution
         self.camera.framerate = framerate
+        self.processor = processor
         # tuning
         self.camera.exposure_mode = 'sports'
         self.camera.color_effects = (128,128)
