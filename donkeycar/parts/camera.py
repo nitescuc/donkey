@@ -200,6 +200,7 @@ class CV2Webcam(BaseCamera):
         while self.on:
             ret, frame = self.cam.read()
             if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 if self.processor != None:
                     frame = self.processor.processFrame(frame)
                 self.frame = frame
@@ -223,7 +224,7 @@ class JetsonCV2Webcam(CV2Webcam):
         return cv2.VideoCapture(self._gst_str(), cv2.CAP_GSTREAMER)
 
     def _gst_str(self):
-        return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=%d, height=%d, format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (
+        return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=%d, height=%d, format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv flip-method=2 ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (
             self.resolution[1], self.resolution[0], self.framerate, self.resolution[1], self.resolution[0])
 
 
