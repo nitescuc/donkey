@@ -11,6 +11,9 @@ class ZmqActuatorEmitter():
         self.publisher = self.context.socket(zmq.PUB)
         self.publisher.bind(binding)
 
+        self.angle = None
+        self.throttle = None
+
         self.on = True
 
     def run(self):

@@ -120,7 +120,7 @@ class Webcam(BaseCamera):
         time.sleep(.5)
 
 class PyGameWebcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0, rotate = 0, processor = None):
+    def __init__(self, resolution = (120, 160), framerate = 20, brightness = 0, rotate = 0, processor = None):
         import pygame
         import pygame.camera
 
@@ -173,7 +173,7 @@ class PyGameWebcam(BaseCamera):
         time.sleep(.5)
 
 class CV2Webcam(BaseCamera):
-    def __init__(self, resolution = (160, 120), framerate = 20, brightness = 0, rotate = 0, processor = None):
+    def __init__(self, resolution = (120, 160), framerate = 20, brightness = 0, rotate = 0, processor = None):
         super().__init__()
 
         self.resolution = resolution
@@ -224,7 +224,7 @@ class JetsonCV2Webcam(CV2Webcam):
 
     def _gst_str(self):
         return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=%d, height=%d, format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (
-            self.resolution[0], self.resolution[1], self.framerate, self.resolution[0], self.resolution[1])
+            self.resolution[1], self.resolution[0], self.framerate, self.resolution[1], self.resolution[0])
 
 
 class MockCamera(BaseCamera):

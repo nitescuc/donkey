@@ -84,7 +84,7 @@ class ConfigAPI(tornado.web.RequestHandler):
             if data['model_path'] != '':
                 if model_path.find('-blur-') >= 0:
                     data['apply_blur'] = True
-                if model_path.find('-clahe-') >= 0:
+                if model_path.find('-clahe') >= 0:
                     data['apply_clahe'] = True
                 if model_path.find('-crop') >= 0:
                     crop_data = re.match(r"-crop(\d*)-", model_path)

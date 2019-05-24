@@ -95,7 +95,7 @@ def drive(cfg):
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
         outputs=[],
-        threaded=True, can_apply_config=True)
+        threaded=True, can_apply_config=False)
 
     # run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
