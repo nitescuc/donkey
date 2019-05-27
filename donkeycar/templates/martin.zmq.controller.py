@@ -110,7 +110,7 @@ def drive(cfg):
     
     ctr = ZmqRemoteEmitter(binding=cfg.ZMQ_REMOTE_EMITTER)
     V.add(ctr, 
-        inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
+        inputs=['user/angle', 'user/throttle', 'user/mode'],
         outputs=[],
         threaded=True, can_apply_config=False)
 
@@ -122,16 +122,16 @@ def drive(cfg):
                         verbose = cfg.SON_VERBOSE
                         )
     V.add(sonar,
-        inputs=['throttle', 'speed'],
-        outputs=['throttle'],
+        inputs=['user/throttle'],
+        outputs=['user/throttle'],
         threaded=True)
 
     led_display = LedDisplay(cfg.LED_RED, cfg.LED_GREEN, cfg.LED_BLUE)
-    V.add(led_display, inputs=['user/mode', 'throttle'])
+    V.add(led_display, inputs=['user/mode', 'user/throttle'])
 
     # steering and throttle should be added at the end
-    V.add(steering, inputs=['angle'])
-    V.add(throttle, inputs=['throttle', 'user/mode'], can_apply_config=True)
+    V.add(steering, inputs=['user/angle'])
+    V.add(throttle, inputs=['user/throttle', 'user/mode'], can_apply_config=True)
 
     # run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
