@@ -40,9 +40,10 @@ from donkeycar.parts.camera_calibrate import ImageCalibrate
 from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
-#from donkeycar.parts.datastore import TubHandler, TubGroup
+from donkeycar.parts.datastore import TubHandler, TubGroup
 from donkeycar.parts.zmq_actuator_emitter import ZmqActuatorEmitter
 from donkeycar.parts.zmq_config_client import ZmqConfigClient
+from donkeycar.parts.zmq_remote_receiver import ZmqRemoteReceiver
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 
@@ -72,7 +73,7 @@ def drive(cfg):
     V.add(apply_config_part, inputs=['config'])
 
     preprocess = ImageProcessor(resolution=cfg.CAMERA_RESOLUTION, applyClahe=True, applyBlur=True)
-    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, brightness=cfg.CAMERA_BRIGHTNESS, processor=preprocess)
+    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, processor=preprocess)
     V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
 
     # See if we should even run the pilot module.
@@ -104,7 +105,29 @@ def drive(cfg):
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 def record(cfg):
-    pass
+    V = dk.vehicle.Vehicle()
+
+    cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE)
+    V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
+
+    ctr = ZmqRemoteReceiver(remote=cfg.ZMQ_REMOTE)
+    V.add(ctr, 
+        inputs=[],
+        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        threaded=True, can_apply_config=False)
+
+    # add tub to save data
+    inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'user/angle', 'user/throttle']
+    types = ['image_array', 'float', 'float', 'str', 'float', 'float']
+
+    th = TubHandler(path=cfg.DATA_PATH)
+    tub = th.new_tub_writer(inputs=inputs, types=types)
+    V.add(tub, inputs=inputs, run_condition='recording')
+
+    V.start(rate_hz=30,
+            max_loop_count=cfg.MAX_LOOPS)
+
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
 def calibrate(cfg):
