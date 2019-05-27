@@ -1,7 +1,6 @@
 import sys
 import zmq
-import numpy as np
-import json
+import time
 
 class ZmqRemoteEmitter():
     def __init__(self, binding = "tcp://*:5555"):
@@ -30,10 +29,12 @@ class ZmqRemoteEmitter():
     def update(self):
         while self.on:
             if self.angle != None and self.throttle != None and self.mode != None:
-                self.publisher.send("remote %d %d %s" % (self.angle, self.throttle, self.mode))
+                self.publisher.send("{} {} {} {}".format("remote", self.angle, self.throttle, self.mode).encode())
                 self.angle = None
                 self.throttle = None
                 self.mode = None
+            time.sleep(0.1)
+            
 
     def shutdown(self):
         # indicate that the thread should be stopped
