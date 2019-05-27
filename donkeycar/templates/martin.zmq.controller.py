@@ -37,6 +37,7 @@ from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.pirfcontroller import PiRfController
 from donkeycar.parts.speed_controller import SpeedController
+from donkeycar.parts.zmq_remote_emitter import ZmqRemoteEmitter
 from donkeycar.parts.sonar import SonarController
 from donkeycar.parts.led_display import LedDisplay
 
@@ -106,36 +107,12 @@ def drive(cfg):
 
     pilot_condition_part = Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
-
-    # Choose what inputs should change the car.
-    def drive_mode(mode,
-                   user_angle, user_throttle,
-                   pilot_angle, pilot_throttle):
-        if mode == 'user':
-            return user_angle, user_throttle
-
-        elif mode == 'local_angle':
-            return pilot_angle, user_throttle
-
-        else:
-            return pilot_angle, pilot_throttle
-
-    drive_mode_part = Lambda(drive_mode)
-    V.add(drive_mode_part,
-          inputs=['user/mode', 'user/angle', 'user/throttle',
-                  'pilot/angle', 'pilot/throttle'],
-          outputs=['angle', 'throttle'])
     
-    def discrete_to_float(steering, throttle, mode):
-        if mode == 'local_angle':
-            th = throttle
-        else:
-            th = throttle * (2/14) - 1
-        st = steering * (2/14) - 1
-        
-        return st, th
-    discrete_to_float_part = Lambda(discrete_to_float)
-    V.add(discrete_to_float_part, inputs=['angle', 'throttle'], outputs=['angle', 'throttle'], run_condition='run_pilot')    
+    ctr = ZmqRemoteEmitter(binding=cfg.ZMQ_REMOTE_EMITTER)
+    V.add(ctr, 
+        inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
+        outputs=[],
+        threaded=True, can_apply_config=False)
 
     # MUST be after discrete_to_float
     sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
