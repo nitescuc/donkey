@@ -110,7 +110,7 @@ def drive(cfg):
     
     ctr = ZmqRemoteEmitter(binding=cfg.ZMQ_REMOTE_EMITTER)
     V.add(ctr, 
-        inputs=['user/angle', 'user/throttle', 'user/mode'],
+        inputs=['user/angle', 'user/throttle'],
         outputs=[],
         threaded=True, can_apply_config=False)
 
@@ -133,11 +133,11 @@ def drive(cfg):
     V.add(steering, inputs=['user/angle'])
     V.add(throttle, inputs=['user/throttle', 'user/mode'], can_apply_config=True)
 
+    print("You can now go to <your pi ip address>:8887 to drive your car.")
+
     # run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
             max_loop_count=cfg.MAX_LOOPS)
-
-    print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
 if __name__ == '__main__':

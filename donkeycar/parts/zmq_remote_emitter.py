@@ -12,27 +12,22 @@ class ZmqRemoteEmitter():
 
         self.angle = None
         self.throttle = None
-        self.mode = None
 
         self.on = True
 
     def run(self):
         pass
 
-    def run_threaded(self, angle, throttle, mode):
+    def run_threaded(self, angle, throttle):
         self.angle = angle
         self.throttle = throttle
-        # remote only allow to switch between automatic modes
-        if mode != 'user':
-            self.mode = mode
 
     def update(self):
         while self.on:
-            if self.angle != None and self.throttle != None and self.mode != None:
-                self.publisher.send("{} {} {} {}".format("remote", self.angle, self.throttle, self.mode).encode())
+            if self.angle != None and self.throttle != None:
+                self.publisher.send("{} {} {}".format("remote", self.angle, self.throttle).encode())
                 self.angle = None
                 self.throttle = None
-                self.mode = None
             time.sleep(0.1)
             
 
