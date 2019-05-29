@@ -1,7 +1,6 @@
 import sys
 import zmq
-import numpy as np
-import json
+import time
 
 class ZmqActuatorEmitter():
     def __init__(self, binding = "tcp://*:5555"):
@@ -11,28 +10,20 @@ class ZmqActuatorEmitter():
         self.publisher = self.context.socket(zmq.PUB)
         self.publisher.bind(binding)
 
-        self.angle = None
-        self.throttle = None
-
         self.on = True
 
-    def run(self):
-        pass
+    def run(self, angle, throttle, mode):
+        self.publisher.send_multipart([b"actuator", str(angle).encode(), str(throttle).encode(), mode.encode()], zmq.NOBLOCK)
 
     def run_threaded(self, angle, throttle, mode):
-        self.angle = angle
-        self.throttle = throttle
+        pass
 
     def update(self):
-        while self.on:
-            if self.angle != None and self.throttle != None:
-                self.publisher.send("angle_throttle %d %d" % (self.angle, self.throttle))
-                self.angle = None
-                self.throttle = None
+        pass
 
     def shutdown(self):
         # indicate that the thread should be stopped
         self.on = False
         print('stoping ZmqActuatorEmitter')
-        self.subscriber.close()
+        self.publisher.close()
         self.context.term()

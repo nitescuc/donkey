@@ -112,7 +112,7 @@ def drive(cfg):
     V.add(ctr, 
         inputs=['user/angle', 'user/throttle'],
         outputs=[],
-        threaded=True, can_apply_config=False)
+        threaded=False, can_apply_config=False)
 
     # MUST be after discrete_to_float
     sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,

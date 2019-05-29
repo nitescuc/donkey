@@ -10,26 +10,16 @@ class ZmqRemoteEmitter():
         self.publisher = self.context.socket(zmq.PUB)
         self.publisher.bind(binding)
 
-        self.angle = None
-        self.throttle = None
-
         self.on = True
 
-    def run(self):
-        pass
+    def run(self, angle, throttle):
+        self.publisher.send_multipart([b"remote", str(angle).encode(), str(throttle).encode()], zmq.NOBLOCK)
 
     def run_threaded(self, angle, throttle):
-        self.angle = angle
-        self.throttle = throttle
+        pass
 
     def update(self):
-        while self.on:
-            if self.angle != None and self.throttle != None:
-                self.publisher.send("{} {} {}".format("remote", self.angle, self.throttle).encode())
-                self.angle = None
-                self.throttle = None
-            time.sleep(0.1)
-            
+        pass            
 
     def shutdown(self):
         # indicate that the thread should be stopped

@@ -12,7 +12,6 @@ class ZmqRemoteReceiver():
 
         self.angle = None
         self.throttle = None
-        self.mode = 'user'
         self.recording = False 
 
         self.on = True
@@ -21,21 +20,20 @@ class ZmqRemoteReceiver():
 
     def run(self):
         [address, angle, throttle] = self.subscriber.recv_multipart()
-        self.angle = angle
-        self.throttle = throttle
-        self.recording = (throttle > 2) 
+        self.angle = float(angle)
+        self.throttle = float(throttle)
+        self.recording = self.recording or (throttle > 0.2) 
         return self.angle, self.throttle, self.recording
 
     def run_threaded(self):
-        return self.angle, self.throttle, self.mode, self.recording
+        return self.angle, self.throttle, self.recording
 
     def update(self):
         while self.on:
-            [address, angle, throttle, mode] = self.subscriber.recv_multipart()
-            self.angle = angle
-            self.throttle = throttle
-            self.mode = mode
-            self.recording = self.recording or (throttle > 8) 
+            [address, angle, throttle] = self.subscriber.recv_multipart()
+            self.angle = float(angle)
+            self.throttle = float(throttle)
+            self.recording = self.recording or (throttle > 0.2) 
 
     def shutdown(self):
         # indicate that the thread should be stopped

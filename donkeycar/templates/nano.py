@@ -76,33 +76,22 @@ def drive(cfg):
     cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, processor=preprocess)
     V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
 
-    # See if we should even run the pilot module.
-    # This is only needed because the part run_condition only accepts boolean
-    def pilot_condition(mode):
-        if mode == 'user':
-            return False
-        else:
-            return True
-    pilot_condition_part = Lambda(pilot_condition)
-    V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
-
     kl = KerasCategorical()
     V.add(kl, inputs=['cam/image_array'],
         outputs=['pilot/angle', 'pilot/throttle'],
-        run_condition='run_pilot', 
         threaded=False, can_apply_config=True)
 
     ctr = ZmqActuatorEmitter(binding=cfg.ZMQ_ACTUATOR_EMITTER)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
         outputs=[],
-        threaded=True, can_apply_config=False)
-
-    # run the vehicle for 20 seconds
-    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
-            max_loop_count=cfg.MAX_LOOPS)
+        threaded=False, can_apply_config=False)
 
     print("You can now go to <your pi ip address>:8887 to drive your car.")
+
+    # run the vehicle for 20 seconds
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
+
 
 def record(cfg):
     V = dk.vehicle.Vehicle()
@@ -113,19 +102,18 @@ def record(cfg):
     ctr = ZmqRemoteReceiver(remote=cfg.ZMQ_REMOTE)
     V.add(ctr, 
         inputs=[],
-        outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
+        outputs=['user/angle', 'user/throttle', 'recording'],
         threaded=True, can_apply_config=False)
 
     # add tub to save data
-    inputs = ['cam/image_array', 'user/angle', 'user/throttle', 'user/mode', 'user/angle', 'user/throttle']
-    types = ['image_array', 'float', 'float', 'str', 'float', 'float']
+    inputs = ['cam/image_array', 'user/angle', 'user/throttle']
+    types = ['image_array', 'float', 'float']
 
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types)
     V.add(tub, inputs=inputs, run_condition='recording')
 
-    V.start(rate_hz=30,
-            max_loop_count=cfg.MAX_LOOPS)
+    V.start(rate_hz=30, max_loop_count=cfg.MAX_LOOPS)
 
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
@@ -144,8 +132,7 @@ def calibrate(cfg):
             inputs=['cam/image_array'],
             threaded=True)        
     # run the vehicle for 20 seconds
-    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
-            max_loop_count=cfg.MAX_LOOPS)
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ, max_loop_count=cfg.MAX_LOOPS)
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
