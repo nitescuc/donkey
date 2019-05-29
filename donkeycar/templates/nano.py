@@ -76,16 +76,25 @@ def drive(cfg):
     cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, processor=preprocess)
     V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
 
+    def pilot_condition(mode):
+        if mode == 'user':
+            return False
+        else:
+            return True
+
+    pilot_condition_part = Lambda(pilot_condition)
+    V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
+
     kl = KerasCategorical()
     V.add(kl, inputs=['cam/image_array'],
         outputs=['pilot/angle', 'pilot/throttle'],
-        threaded=False, can_apply_config=True)
+        run_condition='run_pilot', threaded=False, can_apply_config=True)
 
     ctr = ZmqActuatorEmitter(binding=cfg.ZMQ_ACTUATOR_EMITTER)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
         outputs=[],
-        threaded=False, can_apply_config=False)
+        run_condition='run_pilot', threaded=False, can_apply_config=False)
 
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
