@@ -13,7 +13,15 @@ class ZmqActuatorEmitter():
         self.on = True
 
     def run(self, angle, throttle, mode):
-        self.publisher.send_multipart([b"actuator", str(angle).encode(), str(throttle).encode(), mode.encode()], zmq.NOBLOCK)
+        if angle == None:
+            angle = 7
+        if throttle == None:
+            throttle = 7
+        if mode == None:
+            mode = 'user'
+        remap_angle = angle * (2/14) - 1
+        remap_throttle = throttle * (2/14) - 1
+        self.publisher.send_multipart([b"actuator", str(remap_angle).encode(), str(remap_throttle).encode(), mode.encode()], zmq.NOBLOCK)
 
     def run_threaded(self, angle, throttle, mode):
         pass

@@ -38,6 +38,7 @@ from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.pirfcontroller import PiRfController
 from donkeycar.parts.speed_controller import SpeedController
 from donkeycar.parts.zmq_remote_emitter import ZmqRemoteEmitter
+from donkeycar.parts.zmq_actuator_receiver import ZmqActuatorReceiver
 from donkeycar.parts.sonar import SonarController
 from donkeycar.parts.led_display import LedDisplay
 
@@ -114,7 +115,12 @@ def drive(cfg):
         outputs=[],
         threaded=False, can_apply_config=False)
 
-    # MUST be after discrete_to_float
+    ctr = ZmqActuatorReceiver(remote=cfg.ZMQ_ACTUATOR_EMITTER)
+    V.add(ctr, 
+        inputs=[],
+        outputs=['user/angle', 'user/throttle', 'user/mode'],
+        threaded=True, can_apply_config=False)
+
     sonar = SonarController(trigger_pin=cfg.SON_TRIGGER_PIN,
                         echo_pin=cfg.SON_ECHO_PIN,
                         slowdown_limit=cfg.SON_SLOWDONW,

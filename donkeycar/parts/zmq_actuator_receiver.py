@@ -8,10 +8,11 @@ class ZmqActuatorReceiver():
 
         self.subscriber = self.context.socket(zmq.SUB)
         self.subscriber.connect(remote)
-        self.subscriber.setsockopt(zmq.SUBSCRIBE, b"angle_throttle")
+        self.subscriber.setsockopt(zmq.SUBSCRIBE, b"actuator")
 
         self.angle = None
         self.throttle = None
+        self.mode = None
 
         self.on = True
 
@@ -21,13 +22,14 @@ class ZmqActuatorReceiver():
         pass
 
     def run_threaded(self):
-        return self.angle, self.throttle
+        return self.angle, self.throttle, self.mode
 
     def update(self):
         while self.on:
-            [address, angle, throttle] = self.subscriber.recv_multipart()
-            self.angle = angle
-            self.throttle = throttle
+            [address, angle, throttle, mode] = self.subscriber.recv_multipart()
+            self.angle = float(angle)
+            self.throttle = float(throttle)
+            self.mode = mode.decode()
 
     def shutdown(self):
         # indicate that the thread should be stopped
