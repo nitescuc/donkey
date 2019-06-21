@@ -13,16 +13,21 @@ class ZmqRemoteReceiver():
         self.angle = None
         self.throttle = None
         self.recording = False 
+        self.mode = 'local_angle'
 
         self.on = True
 
         self.speed = 0
 
     def run(self):
-        [address, angle, throttle] = self.subscriber.recv_multipart()
-        self.angle = float(angle)
-        self.throttle = float(throttle)
-        self.recording = self.recording or (throttle > 0.2) 
+        [address, value] = self.subscriber.recv_multipart()
+        address = address.decode()
+        if address == 'remote_steering':
+            self.angle = float(value)
+        if address == 'remote_throttle':
+            self.throttle = float(value)
+        #ignore mode for now
+        self.recording = self.recording or (self.throttle > 0.2) 
         return self.angle, self.throttle, self.recording
 
     def run_threaded(self):

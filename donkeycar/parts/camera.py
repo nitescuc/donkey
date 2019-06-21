@@ -225,7 +225,7 @@ class JetsonCV2Webcam(CV2Webcam):
 
     def _gst_str(self):
         return 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=%d, height=%d, format=(string)NV12, framerate=(fraction)%d/1 ! nvvidconv flip-method=2 ! video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! videoconvert ! appsink' % (
-            self.resolution[1], self.resolution[0], self.framerate, self.resolution[1], self.resolution[0])
+            1280, 720, self.framerate, self.resolution[1], self.resolution[0])
 
 
 class MockCamera(BaseCamera):
