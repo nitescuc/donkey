@@ -338,6 +338,8 @@ class Tub(object):
                 raise TypeError(msg)
 
         logger.info('write record ix {} '.format(str(self.current_ix)))
+        if ((self.current_ix // 100) * 100) == self.current_ix:
+            print('write record ix {} '.format(str(self.current_ix)))
         self.write_json_record(json_data)
         return self.current_ix
 
