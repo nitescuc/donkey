@@ -26,7 +26,7 @@ class SpeedController(object):
             pass
 #            print('Distance break')
 #            return 0
-        if p_mode != 'local':
+        if p_mode == 'user':
             return p_throttle
         else:
             # break management
