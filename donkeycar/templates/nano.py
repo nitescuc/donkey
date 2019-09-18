@@ -47,6 +47,7 @@ from donkeycar.parts.zmq_remote_receiver import ZmqRemoteReceiver
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
 from donkeycar.parts.speed_controller import SpeedController
+from donkeycar.parts.zmq_speed_sensor import ZmqSpeedSensor
 
 from sys import platform
 
@@ -90,6 +91,12 @@ def drive(cfg):
     V.add(kl, inputs=['cam/image_array'],
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', threaded=False, can_apply_config=True)
+
+    crt = ZmqSpeedSensor(remote=cfg.ZMQ_SPEED)
+    V.add(crt,
+        inputs=[],
+        outputs=['speed'],
+        threaded=True)
 
     ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, 
         break_sequence=cfg.BREAK_SEQUENCE)

@@ -18,17 +18,19 @@ class ZmqSpeedSensor():
         self.speed = 0
 
     def run(self):
-        [address, speed] = self.subscriber.recv_multipart()
-        self.speed = float(speed)/1000
-        return self.speed
-
+        pass
+        
     def run_threaded(self):
         return self.speed
 
     def update(self):
         while self.on:
             [address, speed] = self.subscriber.recv_multipart()
-            self.speed = float(speed)/1000
+            speed = float(speed)
+            if speed > 10000:
+                speed = 0
+            speed = 10000 - speed
+            self.speed = speed
             tt = time.time()
             if self.last_time < tt:
                 self.last_time = tt + 1
