@@ -101,7 +101,7 @@ def drive(cfg):
     ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, 
         break_sequence=cfg.BREAK_SEQUENCE)
     V.add(ctr,
-        inputs=['pilot/throttle', 'user/mode'],
+        inputs=['pilot/throttle', 'user/mode', 'speed'],
         outputs=['pilot/throttle'],
         run_condition='run_pilot',
         threaded=False)

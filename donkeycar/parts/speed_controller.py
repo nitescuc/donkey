@@ -15,6 +15,10 @@ class SpeedController(object):
         self.fast_throttle = fast_throttle
         self.break_sequence = break_sequence
         self.distance_break_limit = distance_break_limit
+
+        self.slow_rpm = 4000
+        self.medium_rpm = 3000
+        self.break_speed = 0
         
         self.speed = 0
         self.breakSeq = deque([])
@@ -22,25 +26,16 @@ class SpeedController(object):
 
 
     def run(self, p_throttle, p_mode, p_speed = None, p_distance = None):
-        if p_distance != None and p_distance < self.distance_break_limit:
-            pass
-#            print('Distance break')
-#            return 0
         if p_mode == 'user':
             return p_throttle
         else:
             # break management
-            if p_throttle >= 12:
-                self.speed = self.speed + 1
-                self.breakSeq.clear()
-            elif p_throttle < 12:
-                if self.speed > 10:
-                    self.breakSeq.extend(self.break_sequence)
-                self.speed = 0
-            if len(self.breakSeq):
-#                print('break')
-#                print("Speed " + str(p_speed))
-                p_throttle = self.breakSeq.popleft()
+            if p_throttle <= self.slow_throttle:
+                if p_speed < self.slow_rpm:
+                    p_throttle = self.break_speed
+            elif p_throttle <= self.medium_throttle:
+                if p_speed < self.medium_rpm:
+                    p_throttle = self.break_speed
             return self.throttleMap[p_throttle]
 
     def shutdown(self):
