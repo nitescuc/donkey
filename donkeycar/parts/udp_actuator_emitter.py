@@ -30,6 +30,8 @@ class UdpActuatorEmitter():
         pass
 
     def shutdown(self):
+        bytesToSend = ("{:01.4f};{:01.4f};{}".format(0, 0, 'user')).encode()
+        self.socket.sendto(bytesToSend, (self.remote_addr, self.remote_port))
         # indicate that the thread should be stopped
         self.on = False
         print('stoping UdpActuatorEmitter')
