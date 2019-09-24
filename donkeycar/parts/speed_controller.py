@@ -26,7 +26,7 @@ class SpeedController(object):
 
 
     def run(self, p_throttle, p_mode, p_speed = None, p_distance = None):
-        if p_mode == 'user':
+        if p_mode == 'user' or p_speed == None:
             return p_throttle
         else:
             # break management
