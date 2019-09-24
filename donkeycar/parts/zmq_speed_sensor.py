@@ -10,7 +10,7 @@ class ZmqSpeedSensor():
 
         self.subscriber = self.context.socket(zmq.SUB)
         self.subscriber.connect(remote)
-        self.subscriber.setsockopt(zmq.SUBSCRIBE, b"speed")
+        self.subscriber.setsockopt(zmq.SUBSCRIBE, b"rpm")
 
         self.on = True
 
