@@ -5,6 +5,7 @@ class UdpRemoteReceiver():
     def __init__(self, port):
         #  Socket to talk to server
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.socket.bind(('', port))
 
         self.angle = None
         self.throttle = None
