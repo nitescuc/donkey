@@ -57,11 +57,12 @@ class PiCamera(BaseCamera):
         for f in self.stream:
             # grab the frame from the stream and clear the stream in
             # preparation for the next frame
-            self.frame = f.array
+            frame = f.array
             self.rawCapture.truncate(0)
-            self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             if self.processor != None:
-                self.frame = self.processor.processFrame(self.frame)
+                frame = self.processor.processFrame(frame)
+            self.frame = frame
 
             # if the thread indicator variable is set, stop the thread
             if not self.on:
