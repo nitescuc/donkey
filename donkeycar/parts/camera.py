@@ -59,6 +59,9 @@ class PiCamera(BaseCamera):
             # preparation for the next frame
             self.frame = f.array
             self.rawCapture.truncate(0)
+            self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+            if self.processor != None:
+                self.frame = self.processor.processFrame(self.frame)
 
             # if the thread indicator variable is set, stop the thread
             if not self.on:
