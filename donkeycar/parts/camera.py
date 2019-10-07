@@ -200,17 +200,27 @@ class CV2Webcam(BaseCamera):
     def _create_cam(self):
         return cv2.VideoCapture(0)
 
+    def _readFrame(self):
+        ret, frame = self.cam.read()
+        if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            if self.processor != None:
+                frame = self.processor.processFrame(frame)
+            return frame
+        else:
+            return None
+        
     def update(self):
         while self.on:
-            ret, frame = self.cam.read()
-            if ret:
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                if self.processor != None:
-                    frame = self.processor.processFrame(frame)
-                self.frame = frame
-            else:
+            frame = self._readFrame()
+            if frame == None:
                 break
+            else:
+                self.frame = frame
 #            self.frame = cv2.resize(frame, self.resolution)
+
+    def run(self):
+        return self._readFrame()
 
     def run_threaded(self):
         return self.frame
@@ -219,7 +229,6 @@ class CV2Webcam(BaseCamera):
         # indicate that the thread should be stopped
         self.on = False
         print('stoping Webcam')
-        time.sleep(.5)
         self.cam.release()
 
 
