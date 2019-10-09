@@ -213,10 +213,10 @@ class CV2Webcam(BaseCamera):
     def update(self):
         while self.on:
             frame = self._readFrame()
-            if frame == None:
-                break
-            else:
+            if frame is not None:
                 self.frame = frame
+            else:
+                break
 #            self.frame = cv2.resize(frame, self.resolution)
 
     def run(self):
