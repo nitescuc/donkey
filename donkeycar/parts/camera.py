@@ -50,6 +50,9 @@ class PiCamera(BaseCamera):
         f = next(self.stream)
         frame = f.array
         self.rawCapture.truncate(0)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if self.processor != None:
+            frame = self.processor.processFrame(frame)
         return frame
 
     def update(self):
