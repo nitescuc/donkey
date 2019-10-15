@@ -6,9 +6,9 @@ class UdpSpeedActuatorEmitter():
     def __init__(self, 
         remote_addr, 
         remote_port, 
-        slow_throttle = 4000,
-        medium_throttle = 3000,
-        fast_throttle = 2000
+        slow_throttle = 5000,
+        medium_throttle = 4000,
+        fast_throttle = 3000
         ):
 
         #  Socket to talk to server
