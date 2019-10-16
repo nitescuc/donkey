@@ -5,17 +5,19 @@ class ThrottleController(object):
     def __init__(self,
                  slow_throttle = 10,
                  medium_throttle = 12,
-                 fast_throttle = 14
+                 fast_throttle = 14,
+                 slow_rpm = 4000,
+                 medium_rpm = 3000,
+                 break_intensity = 200
                 ):
         
         self.slow_throttle = slow_throttle
         self.medium_throttle = medium_throttle
         self.fast_throttle = fast_throttle
-        self.break_sequence = break_sequence
-        self.distance_break_limit = distance_break_limit
 
-        self.slow_rpm = 4000
-        self.medium_rpm = 3000
+        self.slow_rpm = slow_rpm
+        self.medium_rpm = medium_rpm
+        self.break_intensity = break_intensity
         self.invert = True
         self.break_speed = 0
 
@@ -51,7 +53,11 @@ class ThrottleController(object):
                     self.target_rpm = None
                 
             if self.is_rpm_superior(p_rpm, self.target_rpm):
-                p_throttle = self.break_speed
+                diff = (self.target_rpm - p_rpm)//self.break_intensity
+                if diff > p_throttle:
+                    diff = p_throttle
+#                print(str(p_throttle)+' '+str(diff))
+                p_throttle = p_throttle - diff
             return self.throttleMap[p_throttle]
 
 

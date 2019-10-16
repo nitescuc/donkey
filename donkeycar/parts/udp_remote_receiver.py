@@ -7,8 +7,8 @@ class UdpRemoteReceiver():
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.socket.bind(('', port))
 
-        self.angle = None
-        self.throttle = None
+        self.angle = 0
+        self.throttle = 0
         self.recording = False 
         self.mode = 'local_angle'
 

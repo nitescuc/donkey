@@ -41,13 +41,12 @@ from donkeycar.parts.preprocess import ImageProcessor
 from donkeycar.parts.transform import Lambda
 from donkeycar.parts.keras import KerasCategorical
 from donkeycar.parts.datastore import TubHandler, TubGroup
-from donkeycar.parts.zmq_actuator_emitter import ZmqActuatorEmitter
+from donkeycar.parts.udp_actuator_emitter import UdpActuatorEmitter
 from donkeycar.parts.zmq_config_client import ZmqConfigClient
-from donkeycar.parts.zmq_remote_receiver import ZmqRemoteReceiver
+from donkeycar.parts.udp_remote_receiver import UdpRemoteReceiver
 from donkeycar.parts.control_api import APIController
 from donkeycar.parts.web_fpv.web import FPVWebController
-from donkeycar.parts.speed_controller import SpeedController
-from donkeycar.parts.zmq_speed_sensor import ZmqSpeedSensor
+from donkeycar.parts.throttle_controller import ThrottleController
 
 from sys import platform
 
@@ -78,6 +77,12 @@ def drive(cfg):
     cam = JetsonCV2Webcam(resolution=cfg.CAMERA_RESOLUTION, framerate=cfg.CAMERA_FRAMERATE, processor=preprocess)
     V.add(cam, outputs=['cam/image_array'], threaded=True, can_apply_config=True)
 
+    ctr = UdpRemoteReceiver(port=5001)
+    V.add(ctr, 
+        inputs=[],
+        outputs=['user/angle', 'user/throttle', 'recording', 'rpm'],
+        threaded=True, can_apply_config=False)
+
     def pilot_condition(mode):
         if mode == 'user':
             return False
@@ -92,21 +97,14 @@ def drive(cfg):
         outputs=['pilot/angle', 'pilot/throttle'],
         run_condition='run_pilot', threaded=False, can_apply_config=True)
 
-    crt = ZmqSpeedSensor(remote=cfg.ZMQ_SPEED)
-    V.add(crt,
-        inputs=[],
-        outputs=['speed'],
-        threaded=True)
-
-    ctr = SpeedController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE, 
-        break_sequence=cfg.BREAK_SEQUENCE)
+    ctr = ThrottleController(slow_throttle=cfg.SLOW_THROTTLE, medium_throttle=cfg.MEDIUM_THROTTLE, fast_throttle=cfg.FAST_THROTTLE)
     V.add(ctr,
-        inputs=['pilot/throttle', 'user/mode', 'speed'],
+        inputs=['pilot/throttle', 'user/mode', 'rpm'],
         outputs=['pilot/throttle'],
         run_condition='run_pilot',
         threaded=False)
 
-    ctr = ZmqActuatorEmitter(binding=cfg.ZMQ_ACTUATOR_EMITTER)
+    ctr = UdpActuatorEmitter(remote_addr='10.42.0.99', remote_port=5001)
     V.add(ctr, 
         inputs=['pilot/angle', 'pilot/throttle', 'user/mode'],
         outputs=[],
