@@ -14,13 +14,13 @@ class UdpRemoteReceiver():
 
         self.on = True
 
-        self.speed = 0
+        self.rpm = 0
 
     def run(self):
         pass
 
     def run_threaded(self):
-        return self.angle, self.throttle, self.recording
+        return self.angle, self.throttle, self.recording, self.rpm
 
     def update(self):
         while self.on:
@@ -30,8 +30,10 @@ class UdpRemoteReceiver():
                 self.angle = float(message[1])
             if message[0] == 'th':
                 self.throttle = float(message[1])
+            if message[0] == 'rpm':
+                self.rpm = int(message[1])
             #ignore mode for now
-            self.recording = self.recording or (self.throttle > 0.2) 
+            self.recording = self.recording or (self.throttle > 0.1) 
 
     def shutdown(self):
         # indicate that the thread should be stopped
