@@ -27,6 +27,21 @@ class ThrottleController(object):
         self.throttleMap = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, self.slow_throttle, 11, self.medium_throttle, 13, self.fast_throttle]
 
     
+    def apply_config(self, config):
+        if 'break_intensity' in config and config['break_intensity']:
+            self.break_intensity = int(config['break_intensity'])
+        if 'slow_throttle' in config and config['slow_throttle']:
+            self.slow_throttle = int(config['slow_throttle'])
+        if 'medium_throttle' in config and config['medium_throttle']:
+            self.medium_throttle = int(config['medium_throttle'])
+        if 'fast_throttle' in config and config['fast_throttle']:
+            self.fast_throttle = int(config['fast_throttle'])
+        if 'slow_rpm' in config and config['slow_rpm']:
+            self.slow_rpm = int(config['slow_rpm'])
+        if 'medium_rpm' in config and config['medium_rpm']:
+            self.medium_rpm = int(config['medium_rpm'])
+
+
     def is_rpm_superior(self, p_speed, p_target):
         if p_target == None or p_speed == 0:
             return False
