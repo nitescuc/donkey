@@ -18,6 +18,12 @@ class ImageProcessor:
         if 'apply_blur' in config:
             print('Applying config blur ' + str(config['apply_blur']))
             self.applyBlur = config['apply_blur']
+        if 'crop_bottom' in config:
+            print('Applying crop bottom ' + str(config['crop_bottom']))
+            self.trimBottom = [config['crop_bottom'], 120]
+        if 'crop_top' in config:
+            print('Applying crop top ' + str(config['crop_top']))
+            self.trimTop = [0, config['crop_top']]
 
 
     def preprocess(self, img):
