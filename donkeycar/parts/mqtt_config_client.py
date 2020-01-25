@@ -8,21 +8,25 @@ class MqttConfigClient():
         self.port = port
         self.mode = 'user'
         self.config = None
-        
+
         self.on = True
 
     def on_message(self, client, userdata, message):
-        print("Config Received mqtt message %s %s" % (message.topic, message.payload))
-        data = json.loads(message.payload)
+        print("Config Received mqtt message %s %s" % (message.topic, message.payload.decode()))
+        data = json.loads(message.payload.decode())
         if 'model_path' in data:
             model_path = data['model_path']
             if data['model_path'] != '':
                 if model_path.find('-blur-') >= 0:
                     data['apply_blur'] = True
-                if model_path.find('-clahe-') >= 0:
+                else:
+                    data['apply_blur'] = False
+                if model_path.find('-clahe') >= 0:
                     data['apply_clahe'] = True
+                else:
+                    data['apply_clahe'] = False
                 if model_path.find('-crop') >= 0:
-                    crop_data = re.match(r"-crop(\d*)-", model_path)
+                    crop_data = re.search(r"-crop(\d*)-", model_path)
                     print(crop_data.groups())
                     crop_level = int(crop_data.groups()[0])
                     if crop_level > 60:
