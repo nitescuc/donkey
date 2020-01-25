@@ -43,6 +43,7 @@ setup(name='donkeycar',
                       'eventlet',
                       'moviepy',
                       'pandas',
+                      'paho-mqtt',
                      ],
 
     extras_require={
