@@ -4,8 +4,8 @@ import paho.mqtt.subscribe as subscribe
 
 class MqttConfigClient():
     def __init__(self, host="localhost", port=1883):
-        subscribe.callback(self.on_message, "config", hostname=host, port=port)
-
+        self.host = host
+        self.port = port
         self.mode = 'user'
 
         self.on = True
@@ -42,6 +42,7 @@ class MqttConfigClient():
         return config, self.mode
 
     def update(self):
+        subscribe.callback(self.on_message, "config", hostname=self.host, port=self.port)
         pass
 
     def shutdown(self):
