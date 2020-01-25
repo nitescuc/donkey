@@ -2,9 +2,9 @@ import json
 import paho.mqtt.subscribe as subscribe
 
 
-class ZmqConfigClient():
-    def __init__(self, mqtt_host):
-        subscribe.callback(self.on_message, "config", hostname=mqtt_host)
+class MqttConfigClient():
+    def __init__(self, host="localhost", port=1883):
+        subscribe.callback(self.on_message, "config", hostname=host, port=port)
 
         self.mode = 'user'
 
