@@ -26,13 +26,17 @@ class MqttConfigClient():
                 else:
                     data['apply_clahe'] = False
                 if model_path.find('-crop') >= 0:
-                    crop_data = re.search(r"-crop(\d*)-", model_path)
-                    print(crop_data.groups())
-                    crop_level = int(crop_data.groups()[0])
-                    if crop_level > 60:
-                        data['crop_bottom'] = crop_level
-                    else:
-                        data['crop_top'] = crop_level
+                    try:
+                        crop_data = re.search(r"-crop(\d*)-", model_path)
+                        print(crop_data.groups())
+                        crop_level = int(crop_data.groups()[0])
+                        if crop_level > 60:
+                            data['crop_bottom'] = crop_level
+                        else:
+                            data['crop_top'] = crop_level
+                    except Exception as err:
+                        print('Config regex error')
+                        print(err)
                 self.mode = 'local_angle'
             else:
                 self.mode = 'user'
