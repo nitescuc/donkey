@@ -1,8 +1,0 @@
-ssh -i "id_rsa.pem" -L 8888:localhost:8888 ubuntu@ec2-52-212-167-51.eu-west-1.compute.amazonaws.com
-
-scp -i "id_rsa.pem" "Data visualisation and model training.ipynb" ubuntu@ec2-52-212-167-51.eu-west-1.compute.amazonaws.com:/home/ubuntu/d2
-scp -i "id_rsa.pem" ~/Downloads/tub_1_18-02-02.zip ubuntu@ec2-52-212-167-51.eu-west-1.compute.amazonaws.com:/home/ubuntu/d2
-
-source activate tensorflow_p36
-
-scp -i "id_rsa.pem" ubuntu@ec2-52-212-167-51.eu-west-1.compute.amazonaws.com:/home/ubuntu/d2/model/model_cat ~/d2/models/aws_model
