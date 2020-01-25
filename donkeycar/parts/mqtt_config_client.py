@@ -7,7 +7,8 @@ class MqttConfigClient():
         self.host = host
         self.port = port
         self.mode = 'user'
-
+        self.config = None
+        
         self.on = True
 
     def on_message(self, client, userdata, message):
